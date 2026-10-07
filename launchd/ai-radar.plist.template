@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.herb.ai-radar</string>
+    <string>com.__USER__.ai-radar</string>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/Users/herb/.claude/skills/ai-radar/scripts/run.sh</string>
+        <string>__HOME__/.claude/skills/ai-radar/scripts/run.sh</string>
     </array>
     <key>StartCalendarInterval</key>
     <dict>
@@ -21,8 +21,8 @@
     <key>RunAtLoad</key>
     <false/>
     <key>StandardOutPath</key>
-    <string>/Users/herb/Library/Logs/ai-radar-launchd.log</string>
+    <string>__HOME__/Library/Logs/ai-radar-launchd.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/herb/Library/Logs/ai-radar-launchd.log</string>
+    <string>__HOME__/Library/Logs/ai-radar-launchd.log</string>
 </dict>
 </plist>
