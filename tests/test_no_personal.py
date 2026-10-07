@@ -4,12 +4,12 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 SCAN = [REPO / "skill", REPO / "vault-template", REPO / "launchd", REPO / "install.sh",
         REPO / "README.md", REPO / "INSTALL.md"]
-FORBIDDEN = ["/Users/herb", "dk40913", "Herb", "Documents/Obsidian"]
+FORBIDDEN = ["/Users/herb", "dk40913@", "Herb", "Documents/Obsidian"]
 # Documents/Obsidian is allowed only as an example default vault path.
 ALLOWED = {(name, "Documents/Obsidian") for name in ("config.example.json", "README.md", "INSTALL.md")}
 # Design docs may name the author and the example vault, but not his home path or email.
 DOCS = REPO / "docs"
-DOCS_FORBIDDEN = ["/Users/herb", "dk40913"]
+DOCS_FORBIDDEN = ["/Users/herb", "dk40913@"]
 
 
 def text_files(scan=SCAN):

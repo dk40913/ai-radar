@@ -30,9 +30,9 @@
 
 在 Claude Code 裡說：
 
-> 照 `<repo URL>` 的 INSTALL.md 安裝 ai-radar
+> 照 `https://github.com/dk40913/ai-radar` 的 INSTALL.md 安裝 ai-radar
 
-它會問你三件事（Obsidian vault 路徑、要不要寄信與寄到哪、有沒有 Parallel API key），然後 clone、安裝、驗證。vault 路徑例如 `~/Documents/Obsidian`。
+它會問你幾件事（Obsidian vault 路徑、要不要寄信與寄到哪、有沒有 Parallel API key、要不要順便裝 Obsidian skills 套件；安裝它的若是 Fable，也會問你要不要改用 Opus 省額度），然後 clone、安裝、驗證。vault 路徑例如 `~/Documents/Obsidian`。
 
 Obsidian 這邊不用做任何設定，週報格式由 skill 產生。週報很長，想要「回到頂端」按鈕可以另裝社群插件 Scroll to Top（選用）。
 
@@ -90,3 +90,7 @@ rm -rf ~/.claude/skills/ai-radar ~/.local/state/ai-radar
 ```
 
 vault 裡的 `AI知識雷達/` 資料夾是你的週報，要留要刪自己決定。有設 Parallel MCP 而且不再需要的話：`claude mcp remove --scope user Parallel-Search-MCP`。
+
+## 授權
+
+MIT，見 [LICENSE](LICENSE)。
