@@ -1,0 +1,53 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(python3 -:*)",
+      "Bash(defuddle:*)",
+      "Bash(cat:*)",
+      "Bash(date:*)",
+      "Bash(mkdir:*)",
+      "Bash(awk:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(ls:*)",
+      "Bash(printf:*)",
+      "Bash(echo:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(~/.claude/skills/ai-radar/scripts/fetch_sources.py:*)",
+      "Bash(~/.claude/skills/ai-radar/scripts/send_mail.sh:*)",
+      "Bash(/Users/herb/.claude/skills/ai-radar/scripts/fetch_sources.py:*)",
+      "Bash(/Users/herb/.claude/skills/ai-radar/scripts/send_mail.sh:*)",
+      "Read",
+      "Edit(~/Documents/Obsidian/AI知識雷達/**)",
+      "Edit(~/Documents/Obsidian/INDEX.md)",
+      "Edit(~/.local/state/ai-radar/**)",
+      "Glob",
+      "Grep",
+      "Agent",
+      "WebFetch",
+      "Skill(ai-radar)",
+      "Skill(obsidian:defuddle)",
+      "Skill(obsidian:obsidian-markdown)",
+      "Bash(uv run:*)",
+      "Bash(uv:*)",
+      "Bash(~/.claude/skills/ai-radar/scripts/fetch_images.py:*)",
+      "Bash(/Users/herb/.claude/skills/ai-radar/scripts/fetch_images.py:*)",
+      "Bash(~/.claude/skills/ai-radar/scripts/add_toc.py:*)",
+      "Bash(/Users/herb/.claude/skills/ai-radar/scripts/add_toc.py:*)",
+      "Bash(~/.claude/skills/ai-radar/scripts/build_html.py:*)",
+      "Bash(/Users/herb/.claude/skills/ai-radar/scripts/build_html.py:*)",
+      "Bash(cp:*)",
+      "Bash(sips:*)",
+      "ToolSearch",
+      "mcp__Parallel-Search-MCP__web_fetch"
+    ],
+    "deny": [
+      "Bash(rm:*)",
+      "Bash(git push:*)",
+      "Bash(launchctl:*)"
+    ]
+  }
+}
