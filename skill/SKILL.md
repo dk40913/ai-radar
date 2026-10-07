@@ -18,7 +18,7 @@ description: AI 知識雷達週報。掃描上次執行到現在的 AI 論文、
 | REPORT | `VAULT/AI知識雷達/<今天 YYYY-MM-DD> AI知識雷達.md` |
 | INDEX | `VAULT/INDEX.md` |
 
-**允許碰的範圍**：只讀寫 RUN_DIR、STATE、`VAULT/AI知識雷達/`（含 `attachments/`）、INDEX，只讀 `VAULT/AI知識雷達/CLAUDE.md` 與 INDEX 的「AI 概念筆記」區塊，只執行 SCRIPTS 下的腳本（fetch_sources、fetch_images、add_toc、build_html、send_mail）與唯讀的 Python 一行指令。不要碰 vault 其他資料夾、不要裝套件、不要改 launchd。
+**允許碰的範圍**：只讀寫 RUN_DIR、STATE、`VAULT/AI知識雷達/`（含 `attachments/`）、INDEX，只讀 `VAULT/AI知識雷達/CLAUDE.md`、INDEX 的「AI 概念筆記」區塊、`~/.claude/skills/ai-radar/config.json` 與 `~/.claude/skills/ai-radar/harness_profile.md`，只執行 SCRIPTS 下的腳本（fetch_sources、fetch_images、add_toc、build_html、send_mail）與唯讀的 Python 一行指令。不要碰 vault 其他資料夾、不要裝套件、不要改 launchd。
 
 ## 步驟
 
@@ -117,7 +117,7 @@ for k,v in im.items(): print(k, v['file'], '|', v['page_url'])" > "$RUN_DIR/imag
 ### 4. 取得可用的 wikilink 名單
 
 ```bash
-awk '/^## AI 概念筆記/,/^## Agent 實作/' "$VAULT/INDEX.md" | grep -oE '^\- \[\[[^]|]+' | sed 's/^- \[\[//'
+awk '/^## AI 概念筆記/{f=1;next} /^## /{f=0} f' "$VAULT/INDEX.md" | grep -oE '^\- \[\[[^]|]+' | sed 's/^- \[\[//'
 ```
 
 存成清單 NOTE_NAMES，傳給每個 subagent。INDEX.md 不存在或沒有「## AI 概念筆記」區塊時，NOTE_NAMES 為空，告訴 subagent 不要加任何 wikilink。
@@ -129,7 +129,7 @@ awk '/^## AI 概念筆記/,/^## Agent 實作/' "$VAULT/INDEX.md" | grep -oE '^\-
 - 它的版面名稱與 `section_<name>.json` 路徑
 - `images_list.txt` 路徑
 - NOTE_NAMES 清單
-- `~/.claude/skills/ai-radar/harness_profile.md` 路徑（使用者目前的工作流現況與「可加進工作流」判斷標準）；這個檔案不存在時改成告訴 subagent「沒有 harness_profile.md，所有條目都不放『可加進工作流』callout」
+- `~/.claude/skills/ai-radar/harness_profile.md` 路徑（使用者目前的工作流現況與「可加進工作流」判斷標準）；這個檔案不存在，或各段內容仍是 `（填：…）` 範本佔位字（安裝後沒填過）時，都當成沒有 profile，改成告訴 subagent「沒有 harness_profile.md，所有條目都不放『可加進工作流』callout」
 - 補抓方式，依 PARALLEL 二選一，把對應那句填進固定指令的 `<補抓方式>`：
   - `true`（有 Parallel API key）：「先用 ToolSearch 載入 `mcp__Parallel-Search-MCP__web_fetch`，以 `session_id: "ai-radar-<今天>"` 抓；失敗再跑 `python3 ~/.claude/skills/ai-radar/scripts/jina_read.py <url>`」
   - `false`（沒有 key）：「跑 `python3 ~/.claude/skills/ai-radar/scripts/jina_read.py <url>`（Jina Reader，免 key；非 0 結束代表讀不到）」
