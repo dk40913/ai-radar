@@ -19,11 +19,39 @@
 
 產業、開源、社群三個版面依來源地分成「外國／台灣／中國」三群。
 
-每一條都固定寫成：一句話結論、原文配圖、「是什麼／技術核心／為什麼重要／對 AI Agent 工程師的意義」四段，附原文與討論連結：
+每一條都固定寫成：一句話結論、原文配圖、「是什麼／技術核心／為什麼重要／對 AI Agent 工程師的意義」四段，附原文與討論連結。同一期有兩種樣子：寫進 vault 的 Obsidian 筆記（目錄是同頁連結、配圖存在 `attachments/`），以及寄信時附上的單檔 HTML（圖片內嵌、報紙排版）：
 
-![週報條目範例](docs/images/report-item.png)
+| Obsidian | HTML（信件附件） |
+|---|---|
+| ![Obsidian 開頭：屬性與目錄](docs/images/obsidian-top.png) | ![HTML 開頭：標題與目錄](docs/images/report.png) |
+| ![Obsidian 條目](docs/images/obsidian-item.png) | ![HTML 條目](docs/images/report-item.png) |
 
-（截圖為 2026-10-03 那期的 HTML 版；條目內的圖片取自各原文出處。）
+（截圖為 2026-10-03 那期；條目內的圖片取自各原文出處。）
+
+## 來源與讀取方式
+
+先由 `fetch_sources.py` 抓候選（只用公開 API、RSS 與列表頁，不需要任何 key），入選的條目再由 subagent 讀原文全文。讀原文時先用 `defuddle`；遇到擋爬蟲或要跑 JavaScript 的頁面才「補抓」，有沒有 Parallel API key 只影響補抓這一步：
+
+- **有 Parallel key**：Parallel `web_fetch`，失敗再用 Jina Reader。
+- **沒有 key**：只用 Jina Reader（免 key，約每分鐘 20 次；設 `JINA_API_KEY` 環境變數可提高額度）。
+
+| 地區 | 來源 | 讀原文方式 | 有 Parallel | 沒有 Parallel |
+|---|---|---|---|---|
+| 外國 | arXiv、Hugging Face Papers | defuddle（abs 頁／論文頁） | ✅ | ✅ |
+| 外國 | Hacker News | defuddle（原文＋討論串） | ✅ | ✅ |
+| 外國 | Reddit（r/LocalLLaMA、r/MachineLearning、r/artificial） | Reddit 擋所有抓取工具 | ⚠️ 只依摘要 | ⚠️ 只依摘要 |
+| 外國 | 新聞（TechCrunch、The Verge、OpenAI、Google DeepMind、Meta） | defuddle；擋爬蟲的官網走補抓 | ✅ Parallel | ✅ Jina |
+| 外國 | GitHub trending、AI Agent 週榜 | defuddle（README） | ✅ | ✅ |
+| 外國 | Medium 出版物（Towards AI 等 4 個） | RSS 內附全文 | ✅ | ✅ |
+| 外國 | dev.to、Hugging Face 部落格、Simon Willison、Lobsters | defuddle | ✅ | ✅ |
+| 台灣 | iThome、TechNews 科技新報 | defuddle | ✅ | ✅ |
+| 台灣 | PTT（Soft_Job、AI 板）、iT邦幫忙 | defuddle | ✅ | ✅ |
+| 中國 | 量子位、雷锋网、CSDN 熱榜 | defuddle | ✅ | ✅ |
+| 中國 | 36氪 | RSS 內附全文 | ✅ | ✅ |
+| 中國 | V2EX | 官方 API（內文＋回覆） | ✅ | ✅ |
+| 中國 | 掘金 | 頁面要跑 JavaScript，直接補抓 | ✅ Parallel | ✅ Jina |
+
+兩條路徑涵蓋的來源相同，差別在補抓的穩定度與速度：Jina 有每分鐘次數上限，補抓多的週次會慢一些，偶爾讀不到的條目會改依摘要撰寫並標上「僅依摘要」。Medium 只收出版物 RSS 每個 feed 最新 10 篇（本站擋爬蟲）；Facebook、Threads、Instagram、知乎、Dcard 擋抓取或要登入，沒有收錄。
 
 如果你填了 `harness_profile.md`（你自己的 AI 工作流現況），能直接裝進你工作流的條目會多一個「可加進工作流」標記。
 
