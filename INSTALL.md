@@ -31,9 +31,9 @@
 
 ## 3. 設定 Parallel MCP（只有使用者有 key 時）
 
-執行 `claude mcp list`。列表裡已有 `Parallel-Search-MCP` 就跳過這步。
+執行 `claude mcp list`。列表裡已有 `Parallel-Search-MCP` 時不用再設定：跟使用者確認他要讓 ai-radar 使用它，確認後第 5 步帶 `--parallel yes`，然後進第 4 步。
 
-沒有的話，把下面這條指令給使用者，請他把 `<KEY>` 換成自己的 key 後，自己在終端機執行（或在 Claude Code 輸入框以 `!` 開頭執行）。不要由你代為執行，因為那樣 key 會經過你的對話紀錄：
+沒有的話，把下面這條指令給使用者，請他把 `<KEY>` 換成自己的 key 後，自己另開一個終端機視窗執行。不要由你代為執行，也不要請他在 Claude Code 輸入框用 `!` 執行，因為那樣 key 會進到你的對話紀錄：
 
 ```bash
 claude mcp add --transport http --scope user Parallel-Search-MCP https://search.parallel.ai/mcp --header "x-api-key: <KEY>"
@@ -74,10 +74,10 @@ cd ~/project/ai-radar
 
 ## 6. 驗證
 
-在 repo 裡跑 skill 的測試：
+在第 5 步的 repo 目錄裡跑 skill 的測試：
 
 ```bash
-cd ~/project/ai-radar/skill && uv run --quiet --with markdown python3 -m unittest discover -s tests
+cd "<第 5 步的 repo 目錄>/skill" && uv run --quiet --with markdown python3 -m unittest discover -s tests
 ```
 
 完成條件：輸出 `OK`。
@@ -85,8 +85,9 @@ cd ~/project/ai-radar/skill && uv run --quiet --with markdown python3 -m unittes
 有設定寄信時，再寄一封測試信：
 
 ```bash
-printf 'ai-radar 安裝測試信\n' > /tmp/ai-radar-test.txt
-~/.claude/skills/ai-radar/scripts/send_mail.sh "ai-radar 測試" /tmp/ai-radar-test.txt
+BODY="$(mktemp)"
+printf 'ai-radar 安裝測試信\n' > "$BODY"
+~/.claude/skills/ai-radar/scripts/send_mail.sh "ai-radar 測試" "$BODY"; rm -f "$BODY"
 ```
 
 執行前先提醒使用者：Mail.app 必須已登入寄件帳號；macOS 會跳出「允許控制 Mail」的視窗，要按「允許」。
