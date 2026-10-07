@@ -5,8 +5,15 @@ set -euo pipefail
 
 SUBJECT="${1:?subject required}"
 BODY_FILE="${2:?body file required}"
-TO="${3:-dk40913@gmail.com}"
+CONFIG="$(dirname "$0")/../config.json"
+CFG_TO="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("mail_to",""))' "$CONFIG" 2>/dev/null || true)"
+TO="${3:-$CFG_TO}"
 ATTACH="${4:-}"
+
+if [ -z "$TO" ]; then
+  echo "mail disabled (config mail_to empty): $SUBJECT"
+  exit 0
+fi
 
 [ -f "$BODY_FILE" ] || { echo "body file not found: $BODY_FILE" >&2; exit 1; }
 if [ -n "$ATTACH" ] && [ ! -f "$ATTACH" ]; then echo "attachment not found: $ATTACH" >&2; exit 1; fi

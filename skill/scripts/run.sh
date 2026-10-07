@@ -3,11 +3,11 @@
 # 手動測試：~/.claude/skills/ai-radar/scripts/run.sh [since=YYYY-MM-DD]
 set -uo pipefail
 
-export HOME="${HOME:-/Users/herb}"
+export HOME="${HOME:?}"
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 export LANG="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
-eval "$(/opt/homebrew/bin/brew shellenv)"
+[ -x /opt/homebrew/bin/brew ] && eval "$(/opt/homebrew/bin/brew shellenv)"
 
 LOG="$HOME/Library/Logs/ai-radar.log"
 LOCK="$HOME/.local/state/ai-radar/run.lock"
@@ -37,6 +37,16 @@ fail() {
   "$SKILL_DIR/scripts/send_mail.sh" "AI知識雷達 執行失敗 $TODAY" "$RUN_DIR/failure.txt" >> "$LOG" 2>&1 || log "failure mail also failed"
 }
 
+# 從 config.json 讀 vault 與 model（install.sh 產生）
+read_config() { python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get(sys.argv[2],""))' "$SKILL_DIR/config.json" "$1" 2>/dev/null; }
+VAULT="$(read_config vault)"
+MODEL="$(read_config model)"
+if [ -z "$VAULT" ]; then
+  fail "config.json 缺少 vault，請重跑 install.sh" "前置檢查"
+  log "=== ai-radar end (code 1) ==="
+  exit 1
+fi
+
 # build_html.py 只能靠 uv 跑（SKILL.md 禁止安裝套件），uv 不在 PATH 上就沒有退路，先擋下來
 if ! command -v uv >/dev/null 2>&1; then
   fail "uv 不在 PATH 上（PATH=${PATH}），build_html.py 無法執行" "前置檢查"
@@ -52,11 +62,11 @@ PROMPT="執行 /ai-radar 週報流程。$*"
 # --max-turns 是防失控的上限（正常一次遠低於此），不是預算
 run_claude() {
   claude -p "$PROMPT" \
-    --model claude-opus-5-5 \
+    ${MODEL:+--model "$MODEL"} \
     --max-turns 200 \
     --permission-mode acceptEdits \
     --settings "$SKILL_DIR/settings.json" \
-    --add-dir "$HOME/Documents/Obsidian" \
+    --add-dir "$VAULT" \
     --add-dir "$HOME/.local/state/ai-radar" \
     --output-format text \
     >> "$LOG" 2>&1

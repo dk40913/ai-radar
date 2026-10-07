@@ -18,7 +18,7 @@ import time
 import urllib.parse
 import urllib.request
 
-UA = "ai-radar/0.1 (personal research bot; contact: dk40913@gmail.com)"
+UA = "ai-radar/0.1 (personal research bot)"
 TIMEOUT = 25
 MIN_WIDTH = 400          # 比這窄的多半是 icon / 頭像
 MAX_WIDTH = 1200         # 存檔前縮到這個寬度以內

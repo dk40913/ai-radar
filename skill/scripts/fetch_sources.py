@@ -22,7 +22,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 
-UA = "ai-radar/0.1 (personal research bot; contact: dk40913@gmail.com)"
+UA = "ai-radar/0.1 (personal research bot)"
 TIMEOUT = 30
 
 # arXiv 一週新投稿有兩千多篇，只留跟 Herb 領域相關的
