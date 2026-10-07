@@ -7,10 +7,13 @@ SCAN = [REPO / "skill", REPO / "vault-template", REPO / "launchd", REPO / "insta
 FORBIDDEN = ["/Users/herb", "dk40913", "Herb", "Documents/Obsidian"]
 # Documents/Obsidian is allowed only as an example default vault path.
 ALLOWED = {(name, "Documents/Obsidian") for name in ("config.example.json", "README.md", "INSTALL.md")}
+# Design docs may name the author and the example vault, but not his home path or email.
+DOCS = REPO / "docs"
+DOCS_FORBIDDEN = ["/Users/herb", "dk40913"]
 
 
-def text_files():
-    for root in SCAN:
+def text_files(scan=SCAN):
+    for root in scan:
         paths = [root] if root.is_file() else sorted(p for p in root.rglob("*") if p.is_file())
         for p in paths:
             if "__pycache__" in p.parts:
@@ -31,6 +34,14 @@ class NoPersonalStringsTest(unittest.TestCase):
                 for n, line in enumerate(text.splitlines(), 1):
                     if word in line:
                         hits.append(f"{path.relative_to(REPO)}:{n}: {word}")
+        self.assertEqual(hits, [])
+
+    def test_docs_have_no_home_path_or_email(self):
+        hits = [f"{path.relative_to(REPO)}:{n}: {word}"
+                for path, text in text_files([DOCS])
+                for n, line in enumerate(text.splitlines(), 1)
+                for word in DOCS_FORBIDDEN if word in line]
+        self.assertTrue(any(True for _ in text_files([DOCS])))
         self.assertEqual(hits, [])
 
     def test_scan_covers_expected_files(self):

@@ -60,12 +60,21 @@ mkdir -p "$DEST"
 rsync -a --exclude='__pycache__' --exclude='/config.json' --exclude='/harness_profile.md' \
   --exclude='/settings.template.json' "$REPO/skill/" "$DEST/"
 
+# launchd starts run.sh with a bare PATH; record where this shell found the tools so run.sh can find them too.
+TOOL_DIRS=""
+for tool in claude defuddle uv python3; do
+  if tool_path="$(command -v "$tool")"; then
+    TOOL_DIRS="$TOOL_DIRS$(dirname "$tool_path")"$'\n'
+  fi
+done
+
 AIR_PARALLEL="$PARALLEL" AIR_VAULT="$VAULT" AIR_MAIL_TO="$MAIL_TO" AIR_MODEL="$MODEL" \
-AIR_SUBAGENT="$SUBAGENT_MODEL" python3 - "$DEST/config.json" <<'PY'
+AIR_SUBAGENT="$SUBAGENT_MODEL" AIR_TOOL_DIRS="$TOOL_DIRS" python3 - "$DEST/config.json" <<'PY'
 import json, os, sys
+dirs = list(dict.fromkeys(d for d in os.environ["AIR_TOOL_DIRS"].splitlines() if d))
 cfg = {"parallel": os.environ["AIR_PARALLEL"] == "yes", "vault": os.environ["AIR_VAULT"],
        "mail_to": os.environ["AIR_MAIL_TO"], "model": os.environ["AIR_MODEL"],
-       "subagent_model": os.environ["AIR_SUBAGENT"]}
+       "subagent_model": os.environ["AIR_SUBAGENT"], "path_prepend": dirs}
 with open(sys.argv[1], "w") as f:
     json.dump(cfg, f, ensure_ascii=False)
 PY
@@ -81,17 +90,20 @@ case "$VAULT" in
   *) VAULT_RULE="/$VAULT" ;;
 esac
 
+# render TEMPLATE OUT json|xml — values are escaped for the output format.
 render() {
   AIR_HOME="$HOME" AIR_VAULT_RULE="$VAULT_RULE" AIR_USER="$USER_NAME" python3 -c '
-import os, sys
+import json, os, sys
+from xml.sax.saxutils import escape
+quote = {"json": lambda v: json.dumps(v, ensure_ascii=False)[1:-1], "xml": escape}[sys.argv[3]]
 t = open(sys.argv[1], encoding="utf-8").read()
 for k, v in (("__HOME__", "AIR_HOME"), ("__VAULT_RULE__", "AIR_VAULT_RULE"), ("__USER__", "AIR_USER")):
-    t = t.replace(k, os.environ[v])
+    t = t.replace(k, quote(os.environ[v]))
 open(sys.argv[2], "w", encoding="utf-8").write(t)
-' "$1" "$2"
+' "$1" "$2" "$3"
 }
 
-render "$REPO/skill/settings.template.json" "$DEST/settings.json"
+render "$REPO/skill/settings.template.json" "$DEST/settings.json" json
 
 mkdir -p "$VAULT/AI知識雷達/attachments"
 if [ ! -e "$VAULT/AI知識雷達/CLAUDE.md" ]; then
@@ -101,10 +113,20 @@ fi
 LABEL="com.$USER_NAME.ai-radar"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 mkdir -p "$HOME/Library/LaunchAgents" "$HOME/Library/Logs"
-render "$REPO/launchd/ai-radar.plist.template" "$PLIST"
+render "$REPO/launchd/ai-radar.plist.template" "$PLIST" xml
 if [ "$NO_LAUNCHD" -eq 0 ]; then
-  launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
-  launchctl bootstrap "gui/$(id -u)" "$PLIST"
+  DOMAIN="gui/$(id -u)"
+  launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
+  # bootout returns before the old job is gone; bootstrapping while it still exists fails.
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    launchctl print "$DOMAIN/$LABEL" >/dev/null 2>&1 || break
+    sleep 0.5
+  done
+  if ! launchctl bootstrap "$DOMAIN" "$PLIST"; then
+    sleep 2
+    launchctl bootstrap "$DOMAIN" "$PLIST" \
+      || die "launchctl bootstrap failed for $PLIST; run install.sh again, or log out and back in and retry"
+  fi
 fi
 
 mkdir -p "$HOME/.local/state/ai-radar"

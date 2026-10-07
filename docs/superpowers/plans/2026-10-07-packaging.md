@@ -14,11 +14,11 @@
 - Repo 版面：`skill/`（安裝到 `~/.claude/skills/ai-radar/` 的全部內容）、`vault-template/AI知識雷達/CLAUDE.md`、`launchd/ai-radar.plist.template`、`install.sh`、`INSTALL.md`、`README.md`、`tests/`（repo 層測試）。
 - 安裝後的設定檔 `~/.claude/skills/ai-radar/config.json`，格式固定：
   ```json
-  {"parallel": false, "vault": "/Users/<user>/Documents/Obsidian", "mail_to": "", "model": "", "subagent_model": "opus"}
+  {"parallel": false, "vault": "/Users/<user>/Documents/Obsidian", "mail_to": "", "model": "", "subagent_model": "opus", "path_prepend": ["/opt/homebrew/bin"]}
   ```
-  `vault` 一律存展開後的絕對路徑；`mail_to` 空字串＝不寄信；`model` 空字串＝不傳 `--model`；`subagent_model` 只能是 `opus`／`sonnet`／`haiku`。
+  `vault` 一律存展開後的絕對路徑；`mail_to` 空字串＝不寄信；`model` 空字串＝不傳 `--model`；`subagent_model` 只能是 `opus`／`sonnet`／`haiku`；`path_prepend` 是 install.sh 找到 `claude`、`defuddle`、`uv`、`python3` 的目錄（去重，可為空 list），run.sh 會把它們放在 PATH 最前面。
 - 讀 config 一律用 `python3` 一行（不引入 jq 等新依賴）。
-- 出貨檔案（`skill/`、`vault-template/`、`launchd/`、`install.sh`、`INSTALL.md`、`README.md`）不得含 `/Users/herb`、`dk40913`、`Documents/Obsidian`（README/INSTALL 中當「預設值範例」除外）、`Herb`。
+- 出貨檔案（`skill/`、`vault-template/`、`launchd/`、`install.sh`、`INSTALL.md`、`README.md`）不得含作者的家目錄路徑（`/Users/<user>`）、作者的帳號／信箱前綴、`Documents/Obsidian`（README/INSTALL 中當「預設值範例」除外）、`Herb`。
 - Claude Code 權限規則路徑：家目錄底下寫 `~/相對路徑`；家目錄外的絕對路徑寫 `//絕對路徑`（單斜線開頭會被當成相對於 settings 檔）。
 - 測試用 `python3 -m unittest`，`build_html` 相關測試需 `uv run --quiet --with markdown`。全部測試從 repo 根目錄跑：`uv run --quiet --with markdown python3 -m unittest discover -s skill/tests && python3 -m unittest discover -s tests`。
 - shell 腳本維持 bash、`set -uo pipefail` 或 `set -euo pipefail`（照原檔）。
@@ -30,7 +30,7 @@ Files: `skill/scripts/send_mail.sh`、`skill/scripts/run.sh`、`skill/scripts/fe
 
 1. `send_mail.sh`：收件者 `TO="${3:-<config mail_to>}"`；config 路徑 `$(dirname "$0")/../config.json`。若 `TO` 為空：印 `mail disabled (config mail_to empty): <主旨>` 並 exit 0，不呼叫 osascript。其他行為不變。
 2. `run.sh`：
-   - 刪掉 `HOME` 的 `/Users/herb` 預設（改 `export HOME="${HOME:?}"`）。
+   - 刪掉 `HOME` 的 `/Users/<user>` 預設（改 `export HOME="${HOME:?}"`）。
    - `eval "$(/opt/homebrew/bin/brew shellenv)"` 改成檔案存在才執行。
    - 從 `$SKILL_DIR/config.json` 讀 `vault` 與 `model`；config 不存在或 vault 空 → 呼叫 `fail "config.json 缺少 vault，請重跑 install.sh" "前置檢查"` 並 exit 1。
    - `claude` 的 `--add-dir "$HOME/Documents/Obsidian"` 改成 `--add-dir "$VAULT"`；`--model claude-opus-5-5` 改成 model 非空才加 `--model "$MODEL"`。其餘旗標（`--max-turns 200` 等）、重試邏輯不變。
@@ -46,7 +46,7 @@ Files: `skill/scripts/send_mail.sh`、`skill/scripts/run.sh`、`skill/scripts/fe
 
 Files: `skill/settings.json` → 改名 `skill/settings.template.json`；`launchd/com.herb.ai-radar.plist` → 改成 `launchd/ai-radar.plist.template`；新增 `install.sh`、`tests/test_install.py`。
 
-1. `settings.template.json`：所有 `/Users/herb/` 開頭的規則改用 `__HOME__/`（之後渲染成絕對路徑，Bash 規則用絕對路徑沒問題）；`Edit(~/Documents/Obsidian/AI知識雷達/**)`、`Edit(~/Documents/Obsidian/INDEX.md)` 改成 `Edit(__VAULT_RULE__/AI知識雷達/**)`、`Edit(__VAULT_RULE__/INDEX.md)`。其餘不變。
+1. `settings.template.json`：所有 `/Users/<user>/` 開頭的規則改用 `__HOME__/`（之後渲染成絕對路徑，Bash 規則用絕對路徑沒問題）；`Edit(~/Documents/Obsidian/AI知識雷達/**)`、`Edit(~/Documents/Obsidian/INDEX.md)` 改成 `Edit(__VAULT_RULE__/AI知識雷達/**)`、`Edit(__VAULT_RULE__/INDEX.md)`。其餘不變。
 2. `ai-radar.plist.template`：Label `com.__USER__.ai-radar`，路徑用 `__HOME__`。排程維持週六 09:00。
 3. `install.sh`（bash，`set -euo pipefail`），旗標：
    - `--vault PATH`（必填，`~` 要展開成絕對路徑；目錄不存在 → 錯誤 exit 1）
@@ -95,7 +95,7 @@ Files: `skill/SKILL.md`、`vault-template/AI知識雷達/CLAUDE.md`、新增 `sk
 3. `vault-template/AI知識雷達/CLAUDE.md`：刪掉「設計文件見 [[AI 知識雷達]]（`藍圖/`）」半句；wikilink 段改成「若 vault 的 `INDEX.md` 有『AI 概念筆記』區塊，以它為準；沒有就不加」；INDEX 段改成「若 vault 有 `INDEX.md`」；Scroll to Top 標為選用。
 4. `harness_profile.example.md`：一份範本，保留原檔結構（主力環境、已裝 plugins／skills、MCP 與外部工具、知識管理、已知缺口、判斷「可加進工作流」的三個標準），內容換成待填的說明文字與通用例子；第一行說明「刪掉這個檔案＝關閉『可加進工作流』標記」。原檔末段三個判斷標準照原文保留（從 `~/.claude/skills/ai-radar/harness_profile.md` 讀，只複製標準段，不複製個人工作流內容）。
 5. `config.example.json`：Global Constraints 的格式，vault 放 `"/Users/you/Documents/Obsidian"`。
-6. `tests/test_no_personal.py`：掃 `skill/`、`vault-template/`、`launchd/`、`install.sh` 的所有文字檔，斷言不含 `/Users/herb`、`dk40913`、`Herb`、`Documents/Obsidian`（`config.example.json` 允許 `Documents/Obsidian`）。
+6. `tests/test_no_personal.py`：掃 `skill/`、`vault-template/`、`launchd/`、`install.sh` 的所有文字檔，斷言不含作者的家目錄路徑、作者的帳號／信箱前綴、`Herb`、`Documents/Obsidian`（`config.example.json` 允許 `Documents/Obsidian`）。
 
 ## Task 4: README.md 與 INSTALL.md
 
@@ -115,5 +115,5 @@ Files: 新增 `README.md`、`INSTALL.md`。
 ## Task 5（controller 執行，不派 subagent）：Herb 本機改用 repo 安裝
 
 1. 備份 `~/.claude/skills/ai-radar` 成 `~/.claude/skills/ai-radar.bak-20261007-pkg`。
-2. `./install.sh --vault ~/Documents/Obsidian --parallel yes --mail-to dk40913@gmail.com --model claude-opus-5-5 --subagent-model opus`（Herb 的 harness_profile.md 保留）。
+2. `./install.sh --vault ~/Documents/Obsidian --parallel yes --mail-to <你的信箱> --model claude-opus-5-5 --subagent-model opus`（Herb 的 harness_profile.md 保留）。
 3. 驗證：`launchctl print gui/$(id -u)/com.herb.ai-radar` 有載入；新 settings.json 與舊版 diff 只有預期差異；skill 測試全過；send_mail.sh 用 config 寄一封測試信前先問 Herb（不寄）。

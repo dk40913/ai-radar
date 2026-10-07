@@ -18,13 +18,26 @@ class InstallTestCase(unittest.TestCase):
         self.skill = self.home / ".claude/skills/ai-radar"
         self.vault = self.home / "Documents/Vault"
         self.repo = REPO
+        self.tools = self.tmp / "tools"
+        self.tools.mkdir()
+        self.path = f"{self.tools}:/usr/bin:/bin"
 
     def install(self, *args, repo=None):
         base = ["--no-launchd", "--skip-checks"]
         return subprocess.run(
             ["bash", str((repo or self.repo) / "install.sh"), *args, *base],
-            env={"HOME": str(self.home), "USER": "tester", "PATH": "/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin"},
+            env={"HOME": str(self.home), "USER": "tester", "PATH": self.path},
             capture_output=True, text=True)
+
+    def stub_tool(self, name):
+        p = self.tools / name
+        p.write_text("#!/bin/bash\nexit 0\n")
+        p.chmod(0o755)
+
+    def config(self):
+        cfg = json.loads((self.skill / "config.json").read_text())
+        self.assertIsInstance(cfg.pop("path_prepend"), list)
+        return cfg
 
     def ok(self, *args, **kw):
         r = self.install(*args, **kw)
@@ -41,7 +54,7 @@ class InstallTestCase(unittest.TestCase):
         self.assertTrue((self.skill / "tests").is_dir())
         self.assertFalse((self.skill / "settings.template.json").exists())
         self.assertFalse(list(self.skill.rglob("__pycache__")))
-        self.assertEqual(json.loads((self.skill / "config.json").read_text()), {
+        self.assertEqual(self.config(), {
             "parallel": False, "vault": str(self.vault), "mail_to": "",
             "model": "", "subagent_model": "opus"})
         self.assertTrue((self.home / ".local/state/ai-radar").is_dir())
@@ -54,6 +67,33 @@ class InstallTestCase(unittest.TestCase):
         self.assertIn("Edit(~/Documents/Vault/INDEX.md)", text)
         self.assertIn(f"Bash({self.skill}/scripts/send_mail.sh:*)", text)
         self.assertNotRegex(text, r"__(HOME|USER|VAULT_RULE)__")
+
+    def test_path_prepend_lists_tool_dirs(self):
+        for name in ("claude", "defuddle", "uv"):
+            self.stub_tool(name)
+        self.default()
+        cfg = json.loads((self.skill / "config.json").read_text())
+        python_dir = os.path.dirname(shutil.which("python3", path=self.path))
+        self.assertEqual(cfg["path_prepend"], [str(self.tools), python_dir])
+
+    def test_path_prepend_skips_missing_tools(self):
+        self.default()
+        cfg = json.loads((self.skill / "config.json").read_text())
+        self.assertEqual(cfg["path_prepend"], [os.path.dirname(shutil.which("python3", path=self.path))])
+
+    def test_special_characters_are_escaped(self):
+        self.home = self.tmp / 'h&o "me"'
+        self.skill = self.home / ".claude/skills/ai-radar"
+        vault = self.home / 'Documents/My "Notes" & Co'
+        vault.mkdir(parents=True)
+        self.ok("--vault", str(vault), "--parallel", "no")
+        allow = json.loads((self.skill / "settings.json").read_text())["permissions"]["allow"]
+        self.assertIn('Edit(~/Documents/My "Notes" & Co/AI知識雷達/**)', allow)
+        self.assertIn(f"Bash({self.skill}/scripts/send_mail.sh:*)", allow)
+        plist = self.home / "Library/LaunchAgents/com.tester.ai-radar.plist"
+        if shutil.which("plutil"):
+            r = subprocess.run(["plutil", "-lint", str(plist)], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
     def test_settings_outside_home(self):
         other = Path(tempfile.mkdtemp())
@@ -82,7 +122,7 @@ class InstallTestCase(unittest.TestCase):
         (self.vault / "AI知識雷達/CLAUDE.md").write_text("mine too")
         self.ok("--vault", "~/Documents/Vault", "--parallel", "yes", "--mail-to", "a@b.c",
                 "--model", "m1", "--subagent-model", "sonnet")
-        self.assertEqual(json.loads((self.skill / "config.json").read_text()), {
+        self.assertEqual(self.config(), {
             "parallel": True, "vault": str(self.vault), "mail_to": "a@b.c",
             "model": "m1", "subagent_model": "sonnet"})
         self.assertEqual((self.skill / "harness_profile.md").read_text(), "mine")

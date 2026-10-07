@@ -66,8 +66,8 @@ cd ~/project/ai-radar
   [--mail-to <email>] --model <你自己目前的 model ID> --subagent-model <opus|sonnet|haiku>
 ```
 
-- `--model`：填你自己這個 session 的 model ID（例如你系統提示裡寫的那個）。這樣排程跑的是同一個模型。
-- `--subagent-model`：填你的模型家族：`opus`、`sonnet` 或 `haiku`。
+- `--model`：填你自己這個 session 的 model ID，一字不差照你系統提示裡寫的抄，連後綴一起保留（例如 `claude-opus-5-5[1m]` 的 `[1m]` 不能拿掉）。這樣排程跑的是同一個模型。
+- `--subagent-model`：你的模型家族是 `opus`、`sonnet` 或 `haiku` 就填那個；其他家族一律填 `opus`。
 - `install.sh` 重跑是安全的；它會檢查依賴，缺東西會列出來並以非 0 結束。
 
 完成條件：結尾印出 `ai-radar installed` 與設定摘要，`schedule` 那行是 `Saturday 09:00`。
@@ -96,13 +96,15 @@ printf 'ai-radar 安裝測試信\n' > "$BODY"
 
 ## 7. （選用）跑第一期週報
 
-先問使用者要不要現在跑一次，並告知約需 30–60 分鐘、會消耗不少方案額度。同意才執行：
+先問使用者要不要現在跑一次，並告知約需 30–60 分鐘、會消耗不少方案額度。同意才執行。
+
+這一步一定要在背景執行：前景的 Bash 工具 10 分鐘就逾時，會把執行中斷。用 Bash 工具的 `run_in_background`，或用 `nohup`：
 
 ```bash
-~/.claude/skills/ai-radar/scripts/run.sh
+nohup ~/.claude/skills/ai-radar/scripts/run.sh >/dev/null 2>&1 &
 ```
 
-進度看 `~/Library/Logs/ai-radar.log`。
+之後用 `tail ~/Library/Logs/ai-radar.log` 看進度，結尾出現 `=== ai-radar end (code 0) ===` 代表成功。
 
 完成條件：`<vault>/AI知識雷達/` 出現今天日期的週報；或使用者選擇不跑，等週六自動執行。
 

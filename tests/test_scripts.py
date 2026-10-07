@@ -8,6 +8,8 @@ from datetime import date
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
+# run.sh's own PATH outside $HOME; a real tool found here would be called by run.sh.
+SYSTEM_PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 
 class ScriptsTestCase(unittest.TestCase):
@@ -29,9 +31,10 @@ class ScriptsTestCase(unittest.TestCase):
             'date +%s%N > "$HOME/.local/state/ai-radar/last_run.json"\n'
         ))
         self._stub("uv", '[ "${1:-}" = "--version" ] && echo "uv 0.0.0"\nexit 0\n')
+        self._stub("defuddle", "exit 0\n")
 
-    def _stub(self, name, body):
-        p = self.bin / name
+    def _stub(self, name, body, directory=None):
+        p = (directory or self.bin) / name
         p.write_text("#!/bin/bash\n" + body)
         p.chmod(0o755)
 
@@ -108,6 +111,43 @@ class RunShTests(ScriptsTestCase):
         failure = self.home / ".local/state/ai-radar/runs" / date.today().isoformat() / "failure.txt"
         self.assertTrue(failure.exists())
         self.assertFalse(self.claude_args.exists())
+
+    def test_failure_shows_notification(self):
+        self.config(vault="")
+        self.run_sh()
+        self.assertIn("display notification", self.osa_args.read_text())
+
+    def test_path_prepend_comes_first(self):
+        extra = self.tmp / "extra"
+        extra.mkdir()
+        marker = self.tmp / "extra_claude_called"
+        self._stub("claude", (
+            f'touch "{marker}"\n'
+            'mkdir -p "$HOME/.local/state/ai-radar"\n'
+            'date +%s%N > "$HOME/.local/state/ai-radar/last_run.json"\n'
+        ), directory=extra)
+        self.config(path_prepend=[str(extra)])
+        r = self.run_sh()
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertTrue(marker.exists())
+        self.assertFalse(self.claude_args.exists())
+
+    def assert_missing_tool_fails(self, tool):
+        if shutil.which(tool, path=SYSTEM_PATH):
+            self.skipTest(f"real {tool} on run.sh's fixed PATH")
+        (self.bin / tool).unlink()
+        self.config()
+        r = self.run_sh()
+        self.assertEqual(r.returncode, 1)
+        failure = self.home / ".local/state/ai-radar/runs" / date.today().isoformat() / "failure.txt"
+        self.assertIn(f"{tool} 不在 PATH 上", failure.read_text())
+        self.assertFalse(self.claude_args.exists())
+
+    def test_missing_claude_fails(self):
+        self.assert_missing_tool_fails("claude")
+
+    def test_missing_defuddle_fails(self):
+        self.assert_missing_tool_fails("defuddle")
 
     def test_missing_config_fails(self):
         r = self.run_sh()

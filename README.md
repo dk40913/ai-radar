@@ -41,14 +41,22 @@ Obsidian 這邊不用做任何設定，週報格式由 skill 產生。週報很�
 | 位置 | 內容 |
 |------|------|
 | `~/.claude/skills/ai-radar/` | skill 本體與腳本 |
-| `~/.claude/skills/ai-radar/config.json` | 設定：vault、收件者、模型、是否用 Parallel |
+| `~/.claude/skills/ai-radar/config.json` | 設定：vault、收件者、模型、是否用 Parallel、工具所在目錄 |
 | `~/.claude/skills/ai-radar/harness_profile.md` | 你的工作流現況（可自行改寫） |
 | `~/Library/LaunchAgents/com.<你的帳號>.ai-radar.plist` | 每週六 09:00 的排程 |
 | `~/.local/state/ai-radar/` | 上次執行時間與每次執行的中間檔 |
 | `~/Library/Logs/ai-radar.log` | 執行 log |
 | `<vault>/AI知識雷達/` | 週報、圖片與該資料夾的撰寫規範 `CLAUDE.md` |
 
-`config.json` 裡 `mail_to` 留空＝不寄信；`model` 留空＝用 Claude Code 預設模型。
+`config.json` 裡 `mail_to` 留空＝不寄信；`model` 留空＝用 Claude Code 預設模型；`path_prepend` 是安裝時找到 `claude`、`defuddle`、`uv`、`python3` 的目錄，排程執行時會放在 PATH 最前面（之後搬動或重裝這些工具，就重跑 `install.sh`）。
+
+### 換模型
+
+排程用的模型是安裝時 `--model` 給的那個。要換的話，用新的 `--model` 重跑 `install.sh`（其他旗標照舊）；給空字串 `--model ""` 則改用 Claude Code 的預設模型。每次執行會派 6 個 subagent，它們用的模型由 `--subagent-model`（`opus`／`sonnet`／`haiku`）決定，換成較小的模型可以省額度。
+
+### 第一次排程執行的權限
+
+第一次由排程自動執行時，macOS 可能會跳出視窗，詢問是否允許存取「文件」資料夾或 iCloud Drive（vault 放在那裡時）。如果第一次排程執行因權限錯誤失敗（log 裡出現 `Operation not permitted` 之類的訊息），到「系統設定 › 隱私權與安全性」把存取權限開給相關程式（例如「完整磁碟取用權限」或「檔案與資料夾」裡的 `bash`、`claude`），再手動跑一次確認。
 
 ## 日常使用
 
@@ -60,7 +68,7 @@ Obsidian 這邊不用做任何設定，週報格式由 skill 產生。週報很�
   ```
 
   可加 `since=YYYY-MM-DD` 指定起始日。也可以在 Claude Code 裡直接打 `/ai-radar`。
-- 看執行狀況：`tail -f ~/Library/Logs/ai-radar.log`。失敗時（有設收件者的話）會寄一封失敗通知。
+- 看執行狀況：`tail -f ~/Library/Logs/ai-radar.log`。失敗時會跳出 macOS 通知，有設收件者的話也會寄一封失敗通知。
 - 「可加進工作流」標記：改寫 `~/.claude/skills/ai-radar/harness_profile.md`，把範本裡的 `（填：…）` 換成你自己的環境。檔案刪掉或沒填就不會出現這個標記。
 
 ## 更新

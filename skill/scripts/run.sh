@@ -35,6 +35,9 @@ fail() {
   log "$1"
   printf '%s\n' "步驟：$2" "錯誤：$1" "log：$LOG" "run dir：$RUN_DIR" > "$RUN_DIR/failure.txt"
   "$SKILL_DIR/scripts/send_mail.sh" "AI知識雷達 執行失敗 $TODAY" "$RUN_DIR/failure.txt" >> "$LOG" 2>&1 || log "failure mail also failed"
+  # 沒設寄信的人也要看得到失敗；訊息用 argv 傳入，避免引號破壞 AppleScript
+  osascript -e 'on run argv' -e 'display notification (item 1 of argv) with title "AI知識雷達"' -e 'end run' \
+    "執行失敗：$1" >/dev/null 2>&1 || true
 }
 
 # 從 config.json 讀 vault 與 model（install.sh 產生）
@@ -47,12 +50,23 @@ if [ -z "$VAULT" ]; then
   exit 1
 fi
 
+# install.sh 記下安裝時找到工具的目錄，launchd 的 PATH 不含使用者 shell 的設定
+PATH_PREPEND="$(python3 -c 'import json,sys; print(":".join(json.load(open(sys.argv[1])).get("path_prepend", [])))' "$SKILL_DIR/config.json" 2>/dev/null)"
+export PATH="${PATH_PREPEND:+$PATH_PREPEND:}$PATH"
+
 # build_html.py 只能靠 uv 跑（SKILL.md 禁止安裝套件），uv 不在 PATH 上就沒有退路，先擋下來
 if ! command -v uv >/dev/null 2>&1; then
   fail "uv 不在 PATH 上（PATH=${PATH}），build_html.py 無法執行" "前置檢查"
   log "=== ai-radar end (code 1) ==="
   exit 1
 fi
+for tool in claude defuddle; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    fail "$tool 不在 PATH 上（PATH=${PATH}），請重跑 install.sh" "前置檢查"
+    log "=== ai-radar end (code 1) ==="
+    exit 1
+  fi
+done
 log "uv: $(command -v uv) $(uv --version 2>&1)"
 
 # 額外參數（例如 since=2026-09-01）原樣傳給 skill
