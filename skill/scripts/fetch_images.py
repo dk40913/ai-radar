@@ -3,7 +3,7 @@
 
 用法:
     fetch_images.py --run-dir ~/.local/state/ai-radar/runs/2026-09-07 --date 2026-09-07 \
-                    --out-dir ~/Documents/Obsidian/AI知識雷達/attachments
+                    --out-dir "$VAULT/AI知識雷達/attachments"
 
 輸出 <run-dir>/images.json: {"<候選索引>": {"file": "檔名", "image_url": ..., "page_url": ..., "width": w, "height": h}}
 圖片存到 <out-dir>/<date>-<idx>-<slug>.<ext>。只用標準庫 + macOS sips。

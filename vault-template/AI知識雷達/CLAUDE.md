@@ -1,6 +1,6 @@
 # AI知識雷達/ 資料夾規範
 
-這個資料夾放每週自動產生的 AI 動態週報。設計文件見 [[AI 知識雷達]]（`藍圖/`），產生流程由 `~/.claude/skills/ai-radar/` 的 skill 執行。
+這個資料夾放每週自動產生的 AI 動態週報。產生流程由 `~/.claude/skills/ai-radar/` 的 skill 執行。
 
 ## 命名
 
@@ -36,7 +36,7 @@ sources_failed: []
 
 產業與產品版、開源與工具版、社群熱議版依來源地區分群，每組前一行標記 `**▍外國**`／`**▍台灣**`／`**▍中國**`（沒有條目的地區省略）；目錄、HTML、信件摘要都靠這個標記分群，人工編輯時保持原樣。
 
-`## 頭版` 之前有「本週導讀」；`> 涵蓋` 行之後有 `> [!abstract] 本期目錄` callout，由 `~/.claude/skills/ai-radar/scripts/add_toc.py` 從 `##`／`###` 標題自動產生（同頁 `[[#標題]]` 連結），人工改過標題後重跑即可更新，不要手寫。回頂端靠社群插件 Scroll to Top 的浮動按鈕，筆記裡不放。
+`## 頭版` 之前有「本週導讀」；`> 涵蓋` 行之後有 `> [!abstract] 本期目錄` callout，由 `~/.claude/skills/ai-radar/scripts/add_toc.py` 從 `##`／`###` 標題自動產生（同頁 `[[#標題]]` 連結），人工改過標題後重跑即可更新，不要手寫。回頂端可選用社群插件 Scroll to Top 的浮動按鈕（沒裝也沒關係），筆記裡不放。
 
 ## 每條項目的寫法
 
@@ -46,11 +46,11 @@ sources_failed: []
 
 ## Wikilink
 
-提到 vault 已有的概念筆記時要連結（例如 `[[MoE 混合專家架構]]`、`[[KV Cache]]`、`[[MCP]]`、`[[LangGraph]]`）。可連結的名單以 `INDEX.md` 的「AI 概念筆記」區塊為準。
+提到 vault 已有的概念筆記時要連結（例如 `[[MoE 混合專家架構]]`、`[[KV Cache]]`、`[[MCP]]`、`[[LangGraph]]`）。若 vault 的 `INDEX.md` 有「AI 概念筆記」區塊，可連結的名單以它為準；沒有就不加 wikilink。
 
 ## INDEX.md
 
-每期產出後在「AI 知識雷達」區塊加一行：`- [[YYYY-MM-DD AI知識雷達]] — 頭版一句話`。
+若 vault 有 `INDEX.md`，每期產出後在「AI 知識雷達」區塊加一行：`- [[YYYY-MM-DD AI知識雷達]] — 頭版一句話`。
 
 ## 交付格式
 

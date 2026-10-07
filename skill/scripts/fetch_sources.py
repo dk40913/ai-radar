@@ -25,7 +25,7 @@ from email.utils import parsedate_to_datetime
 UA = "ai-radar/0.1 (personal research bot)"
 TIMEOUT = 30
 
-# arXiv 一週新投稿有兩千多篇，只留跟 Herb 領域相關的
+# arXiv 一週新投稿有兩千多篇，只留跟 AI Agent 工程相關的
 ARXIV_KEYWORDS = [
     "agent", "llm", "large language model", "language model", "rag", "retrieval-augmented",
     "retrieval augmented", "tool use", "tool-use", "tool calling", "function calling",
