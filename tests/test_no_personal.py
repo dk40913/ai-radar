@@ -2,9 +2,11 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-SCAN = [REPO / "skill", REPO / "vault-template", REPO / "launchd", REPO / "install.sh"]
+SCAN = [REPO / "skill", REPO / "vault-template", REPO / "launchd", REPO / "install.sh",
+        REPO / "README.md", REPO / "INSTALL.md"]
 FORBIDDEN = ["/Users/herb", "dk40913", "Herb", "Documents/Obsidian"]
-ALLOWED = {("config.example.json", "Documents/Obsidian")}
+# Documents/Obsidian is allowed only as an example default vault path.
+ALLOWED = {(name, "Documents/Obsidian") for name in ("config.example.json", "README.md", "INSTALL.md")}
 
 
 def text_files():
@@ -33,7 +35,7 @@ class NoPersonalStringsTest(unittest.TestCase):
 
     def test_scan_covers_expected_files(self):
         names = {p.name for p, _ in text_files()}
-        self.assertTrue({"SKILL.md", "install.sh", "CLAUDE.md"} <= names, names)
+        self.assertTrue({"SKILL.md", "install.sh", "CLAUDE.md", "README.md", "INSTALL.md"} <= names, names)
 
 
 if __name__ == "__main__":
