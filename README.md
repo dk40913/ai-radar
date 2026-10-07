@@ -1,5 +1,9 @@
 # ai-radar：AI 知識雷達週報
 
+> **English** — ai-radar is a Claude Code skill that runs unattended every Saturday on macOS. It scans the past week's AI papers, news, open-source projects and developer discussions across English, Taiwanese and Simplified-Chinese sources (12 sources, several hundred candidates). It picks the items that matter for AI agent engineers, sends six parallel subagents to read each original source in full, and writes a newspaper-style weekly report into an Obsidian vault. It can also mail a short digest with a self-contained HTML edition. It runs through `claude -p` with a permission allowlist instead of skipping permissions. It retries once on failure and treats a run as successful only when its state file advances. Installation is agent-driven: hand this repo's URL to Claude Code and it follows [`INSTALL.md`](INSTALL.md).
+
+![週報開頭：導讀與目錄](docs/images/report.png)
+
 一個 Claude Code skill。每週六 09:00 由 macOS launchd 自動執行，掃描上次執行到現在的 AI 論文、論壇、新聞與開源動態，深入研究後產出一份報紙式週報，寫進你的 Obsidian vault；可選擇同時用 Mail.app 寄一封短版信（附完整 HTML 版）。
 
 ## 週報長什麼樣子
@@ -15,7 +19,55 @@
 
 產業、開源、社群三個版面依來源地分成「外國／台灣／中國」三群。
 
+每一條都固定寫成：一句話結論、原文配圖、「是什麼／技術核心／為什麼重要／對 AI Agent 工程師的意義」四段，附原文與討論連結：
+
+![週報條目範例](docs/images/report-item.png)
+
+（截圖為 2026-10-03 那期的 HTML 版；條目內的圖片取自各原文出處。）
+
 如果你填了 `harness_profile.md`（你自己的 AI 工作流現況），能直接裝進你工作流的條目會多一個「可加進工作流」標記。
+
+## 架構
+
+```mermaid
+flowchart TD
+    L["launchd<br/>每週六 09:00"] --> R["run.sh<br/>鎖檔、讀 config、檢查依賴<br/>失敗等 60 分鐘重試一次"]
+    R --> C["claude -p + SKILL.md<br/>settings.json 權限白名單"]
+
+    subgraph S1["1 抓候選（fetch_sources.py，純 Python）"]
+        direction LR
+        F1["外國<br/>arXiv · HF Papers · HN · Reddit<br/>新聞 · GitHub trending · 部落格"]
+        F2["台灣<br/>iThome · TechNews<br/>PTT · iT邦幫忙"]
+        F3["中國<br/>量子位 · 雷锋网 · 36氪<br/>掘金 · CSDN · V2EX"]
+    end
+    C --> S1
+    S1 --> B["candidates.brief.md<br/>一行一條，帶地區標記"]
+    B --> SEL["2 主 agent 去重、評分、分版面<br/>selection.json"]
+    SEL --> IMG["fetch_images.py<br/>抓原文配圖"]
+
+    subgraph S3["3 平行研究：6 個 subagent，一個版面一個"]
+        direction LR
+        A1[頭版] ~~~ A2[論文] ~~~ A3[產業] ~~~ A4[開源] ~~~ A5[GitHub 週榜] ~~~ A6[社群]
+    end
+    IMG --> S3
+    S3 -.讀原文.-> RD["defuddle<br/>讀不到時：Parallel web_fetch（有 key）→ Jina Reader"]
+    S3 --> D["draft_*.md"]
+    D --> CMP["4 組稿<br/>導讀、本週值得跟進、附錄"]
+    CMP --> TOC["add_toc.py<br/>目錄與外國／台灣／中國分群"]
+    TOC --> OB[("Obsidian vault<br/>AI知識雷達/日期.md")]
+    TOC --> H["build_html.py<br/>單檔 HTML＋短版摘要"]
+    H --> M["send_mail.sh<br/>Mail.app（選用）"]
+    M --> ST["last_run.json<br/>狀態前進才算成功"]
+    OB --> ST
+```
+
+幾個設計重點：
+
+- **無人值守但不放權**：`claude -p` 搭配 `settings.json` 白名單，只允許特定腳本、指令和 vault 資料夾；不用 `--dangerously-skip-permissions`。
+- **確定性的部分交給腳本**：抓來源、分頁、日期過濾、目錄與 HTML 都是 Python，模型只做挑選、閱讀與撰稿。
+- **主 agent 只讀摘要**：候選清單壓成一行一條的 brief，完整 JSON 依版面切檔交給 subagent，主 context 不被幾百條原始資料塞滿。
+- **外部內容當資料**：抓回來的網頁、討論串一律只是報導對象，裡面的指令不照做（防 prompt injection）。
+- **成功的定義可驗證**：`run.sh` 不看 exit code，看狀態檔有沒有前進；沒寄出（或沒寫完）就重試一次，再失敗就寄信或跳通知。
 
 ## 需求
 
