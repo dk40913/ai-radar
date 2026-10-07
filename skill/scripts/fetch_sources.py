@@ -199,8 +199,10 @@ def arxiv_keywords():
     """config 的 arxiv_keywords 非空就用它（轉小寫），否則（含 config 不存在或壞掉）用內建清單。"""
     try:
         kws = json.loads(CONFIG_PATH.read_text(encoding="utf-8")).get("arxiv_keywords")
+        if not isinstance(kws, list):
+            return ARXIV_KEYWORDS
         kws = [k.strip().lower() for k in kws if isinstance(k, str) and k.strip()]
-    except (OSError, ValueError, AttributeError, TypeError):
+    except (OSError, ValueError, AttributeError):
         return ARXIV_KEYWORDS
     return kws or ARXIV_KEYWORDS
 

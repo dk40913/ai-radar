@@ -38,7 +38,7 @@ class ReaderFocusTest(unittest.TestCase):
     def test_reader_placeholder_replaces_fixed_audience(self):
         text = (REPO / "skill/SKILL.md").read_text(encoding="utf-8")
         self.assertNotIn("對 AI Agent 工程師的意義", text)
-        self.assertIn("READER", text)
+        self.assertIn("**對 <READER>的意義**", text)
 
 
 if __name__ == "__main__":

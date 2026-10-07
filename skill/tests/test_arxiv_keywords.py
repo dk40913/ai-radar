@@ -38,6 +38,10 @@ class ArxivKeywordsTest(unittest.TestCase):
         self.write(json.dumps({"vault": "/x"}))
         self.assertEqual(fs.arxiv_keywords(), fs.ARXIV_KEYWORDS)
 
+    def test_non_list_falls_back(self):
+        self.write(json.dumps({"arxiv_keywords": "mri"}))
+        self.assertEqual(fs.arxiv_keywords(), fs.ARXIV_KEYWORDS)
+
     def test_missing_file_falls_back(self):
         self.assertEqual(fs.arxiv_keywords(), fs.ARXIV_KEYWORDS)
 

@@ -81,7 +81,7 @@ cd ~/project/ai-radar
 
 - `--model`：填你自己這個 session 的 model ID，一字不差照你系統提示裡寫的抄，連後綴一起保留（例如 `claude-opus-5-5[1m]` 的 `[1m]` 不能拿掉）。這樣排程跑的是同一個模型。使用者在第 2 步選了改用 Opus 時，填 `claude-opus-5-5`，`--subagent-model` 填 `opus`。
 - `--subagent-model`：你的模型家族是 `opus`、`sonnet` 或 `haiku` 就填那個；其他家族一律填 `opus`。
-- `--reader`／`--focus`／`--arxiv-keywords`：第 2 步使用者用預設時三個都不帶。他給了自訂讀者或主題時，`--reader` 填讀者、`--focus` 填主題；再依主題產生 15–30 個英文小寫 arXiv 關鍵字（會拿來對論文標題與摘要做子字串比對，所以要用常見詞形，例如 `diffusion`、`medical imag`），先給使用者看、他同意後用逗號串起來傳給 `--arxiv-keywords`。
+- `--reader`／`--focus`／`--arxiv-keywords`：第 2 步使用者用預設時三個都不帶。他自訂了讀者就用 `--reader` 填讀者；自訂了關注主題就用 `--focus` 填主題，並依主題產生 15–30 個英文小寫 arXiv 關鍵字（會拿來對論文標題與摘要做子字串比對，所以要用常見詞形，例如 `diffusion`、`medical imag`），先給使用者看、他同意後用逗號串起來傳給 `--arxiv-keywords`。只改讀者、主題沿用預設時，不帶 `--focus` 與 `--arxiv-keywords`。
 - `install.sh` 重跑是安全的；它會檢查依賴，缺東西會列出來並以非 0 結束。
 
 完成條件：結尾印出 `ai-radar installed` 與設定摘要，`schedule` 那行是 `Saturday 09:00`。
