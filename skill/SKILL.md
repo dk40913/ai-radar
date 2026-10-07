@@ -28,12 +28,14 @@ description: AI 知識雷達週報。掃描上次執行到現在的 AI 論文、
 cat ~/.claude/skills/ai-radar/config.json
 ```
 
-記下四個值，後面都用它們：
+記下六個值，後面都用它們：
 
 - VAULT = `vault`（已展開的絕對路徑；下面指令裡的 `$VAULT` 都代入這個值）
 - MAIL_TO = `mail_to`（空字串＝不寄信）
 - PARALLEL = `parallel`
 - SUBAGENT_MODEL = `subagent_model`（`opus`／`sonnet`／`haiku`）
+- READER = `reader`（週報的讀者；沒有這個鍵或空字串時用 `AI Agent 工程師`）
+- FOCUS = `focus`（讀者關注的主題；沒有這個鍵或空字串時用 `AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具`）
 
 ### 1. 算時間窗
 
@@ -61,7 +63,7 @@ python3 ~/.claude/skills/ai-radar/scripts/fetch_sources.py --since "$SINCE" --ou
 讀 `candidates.brief.md` 後：
 
 1. **去重合併**：同一論文同時出現在 arxiv 與 hf_papers（arXiv id 相同）、同一新聞同時出現在 hackernews / reddit / news，合併成一條，保留所有連結。台灣、中國條目若只是轉述外國新聞，就併進外國那條（`merged`）；帶有在地資訊的（台灣或中國企業、產品、政策、社群實測）才自成一條。
-2. **評分**：熱度（HN points、HF upvotes、GitHub stars、Reddit 名次、arXiv keyword_hits、PTT 推文數、iT邦幫忙與掘金點讚數、dev.to reactions、CSDN 熱度各自在來源內相對高低；Medium、Simon Willison 等沒有熱度數字的部落格只看相關性與內容深度）、跨來源出現次數、與 AI Agent 工程師的相關性（AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具）。台灣、中國條目只和同地區的條目比。
+2. **評分**：熱度（HN points、HF upvotes、GitHub stars、Reddit 名次、arXiv keyword_hits、PTT 推文數、iT邦幫忙與掘金點讚數、dev.to reactions、CSDN 熱度各自在來源內相對高低；Medium、Simon Willison 等沒有熱度數字的部落格只看相關性與內容深度）、跨來源出現次數、與 READER 的相關性（FOCUS）。台灣、中國條目只和同地區的條目比。
 3. **挑選**：外國條目最多 25 條；台灣、中國條目各最多 6 條，每個分群版面每地區最多 3 條，只收夠格的、寧缺勿濫。分到五個版面：
    - `headline` 頭版：1–3 條，本週最重要的事
    - `papers` 論文版
@@ -133,6 +135,7 @@ awk '/^## AI 概念筆記/{f=1;next} /^## /{f=0} f' "$VAULT/INDEX.md" | grep -oE
 - 補抓方式，依 PARALLEL 二選一，把對應那句填進固定指令的 `<補抓方式>`：
   - `true`（有 Parallel API key）：「先用 ToolSearch 載入 `mcp__Parallel-Search-MCP__web_fetch`，以 `session_id: "ai-radar-<今天>"` 抓；失敗再跑 `python3 ~/.claude/skills/ai-radar/scripts/jina_read.py <url>`」
   - `false`（沒有 key）：「跑 `python3 ~/.claude/skills/ai-radar/scripts/jina_read.py <url>`（Jina Reader，免 key；非 0 結束代表讀不到）」
+- READER：把它的值填進固定指令的 `<READER>`（和 `<補抓方式>` 一樣直接代入）
 - 以下固定指令：
 
 > 你負責「<版面中文名>」。讀 `<section json>`，對每一條：
@@ -144,7 +147,7 @@ awk '/^## AI 概念筆記/{f=1;next} /^## /{f=0} f' "$VAULT/INDEX.md" | grep -oE
 >    - 空一行後 `**一句話** <20–45 字，這條對讀者最重要的結論或數字，不重複標題>`
 >    - 先讀 `harness_profile.md`。若這條依該檔末段的三個標準判斷「可加進使用者現有工作流」，緊接著放兩行 callout：`> [!tip] 可加進工作流` 與 `> <一兩句：加在哪一環、補什麼缺口、和現有哪個東西重疊要注意>`。判斷要嚴格，論文、新聞通常不標；不符合就不放
 >    - 若 `<RUN_DIR>/images_list.txt` 裡有這條的圖（用原文／討論／另見 URL 比對，忽略結尾斜線），接著放 `![[<檔名>]]` 與下一行 `*圖：<10–30 字說明這張圖是什麼>*`；沒有就不放
->    - 正文四段，每段以粗體標籤開頭：**是什麼**、**技術核心**、**為什麼重要**、**對 AI Agent 工程師的意義**。整條至少 200 字，具體且好理解，不要空話。技術核心要講到方法層面（怎麼做、跟既有做法差在哪、數字證據）。
+>    - 正文四段，每段以粗體標籤開頭：**是什麼**、**技術核心**、**為什麼重要**、**對 <READER> 的意義**。整條至少 200 字，具體且好理解，不要空話。技術核心要講到方法層面（怎麼做、跟既有做法差在哪、數字證據）。
 > 3. 結尾列 `原文：<url>`，有討論串就加 `討論：<url>`。
 > 4. 提到 NOTE_NAMES 裡的概念時用 `[[名稱]]` 連結（只連結名單內的，不要自創）。
 > 5. 把整個版面的稿件寫到 `<RUN_DIR>/draft_<name>.md`（只有 `###` 條目，不要版面 `##` 標題）。產業與產品版、開源與工具版、社群熱議版依每條的 `region` 分組，順序外國、台灣、中國，每組前放一行分群標記（前後各空一行）：`**▍外國**`、`**▍台灣**`、`**▍中國**`；沒有條目的地區整組省略。標記格式要一字不差，目錄、HTML、信件摘要都靠它分群。

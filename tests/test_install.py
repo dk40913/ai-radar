@@ -35,7 +35,7 @@ class InstallTestCase(unittest.TestCase):
         p.chmod(0o755)
 
     def config(self):
-        cfg = json.loads((self.skill / "config.json").read_text())
+        cfg = json.loads((self.skill / "config.json").read_text(encoding="utf-8"))
         self.assertIsInstance(cfg.pop("path_prepend"), list)
         return cfg
 
@@ -56,7 +56,8 @@ class InstallTestCase(unittest.TestCase):
         self.assertFalse(list(self.skill.rglob("__pycache__")))
         self.assertEqual(self.config(), {
             "parallel": False, "vault": str(self.vault), "mail_to": "",
-            "model": "", "subagent_model": "opus"})
+            "model": "", "subagent_model": "opus", "reader": "AI Agent 工程師",
+            "focus": "AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具", "arxiv_keywords": []})
         self.assertTrue((self.home / ".local/state/ai-radar").is_dir())
 
     def test_settings_inside_home(self):
@@ -124,9 +125,21 @@ class InstallTestCase(unittest.TestCase):
                 "--model", "m1", "--subagent-model", "sonnet")
         self.assertEqual(self.config(), {
             "parallel": True, "vault": str(self.vault), "mail_to": "a@b.c",
-            "model": "m1", "subagent_model": "sonnet"})
+            "model": "m1", "subagent_model": "sonnet", "reader": "AI Agent 工程師",
+            "focus": "AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具", "arxiv_keywords": []})
         self.assertEqual((self.skill / "harness_profile.md").read_text(), "mine")
         self.assertEqual((self.vault / "AI知識雷達/CLAUDE.md").read_text(), "mine too")
+
+    def test_reader_focus_keywords(self):
+        r = self.ok("--vault", "~/Documents/Vault", "--parallel", "no", "--reader", "醫療影像研究員",
+                    "--focus", "醫學影像、診斷模型", "--arxiv-keywords", " Medical Imag, segmentation,,MRI ")
+        cfg = self.config()
+        self.assertEqual(cfg["reader"], "醫療影像研究員")
+        self.assertEqual(cfg["focus"], "醫學影像、診斷模型")
+        self.assertEqual(cfg["arxiv_keywords"], ["medical imag", "segmentation", "mri"])
+        self.assertIn("醫療影像研究員", (self.skill / "config.json").read_text(encoding="utf-8"))
+        self.assertIn("focus:", r.stdout)
+        self.assertIn("醫學影像、診斷模型", r.stdout)
 
     def test_harness_profile_copied_from_example(self):
         repo = self.tmp / "repo"

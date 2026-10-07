@@ -34,5 +34,12 @@ class NoteNamesOneLinerTest(unittest.TestCase):
         self.assertEqual(self.run_on(None), [])
 
 
+class ReaderFocusTest(unittest.TestCase):
+    def test_reader_placeholder_replaces_fixed_audience(self):
+        text = (REPO / "skill/SKILL.md").read_text(encoding="utf-8")
+        self.assertNotIn("對 AI Agent 工程師的意義", text)
+        self.assertIn("READER", text)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -21,11 +21,12 @@ import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
+from pathlib import Path
 
 UA = "ai-radar/0.1 (personal research bot)"
 TIMEOUT = 30
 
-# arXiv 一週新投稿有兩千多篇，只留跟 AI Agent 工程相關的
+# arXiv 一週新投稿有兩千多篇，只留命中關鍵字的；config 的 arxiv_keywords 非空時改用它
 ARXIV_KEYWORDS = [
     "agent", "llm", "large language model", "language model", "rag", "retrieval-augmented",
     "retrieval augmented", "tool use", "tool-use", "tool calling", "function calling",
@@ -35,6 +36,7 @@ ARXIV_KEYWORDS = [
     "chain of thought", "test-time", "inference-time", "instruction tuning",
 ]
 ARXIV_MAX_ITEMS = 200
+CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"
 
 HN_QUERIES = ["AI", "LLM", "GPT", "Claude", "Gemini", "OpenAI", "Anthropic",
               "agent", "language model", "open source model"]
@@ -193,10 +195,20 @@ def item(source, title, url, published_at, score, score_kind, summary, **extra):
 
 # ---------- 各來源 ----------
 
-def _arxiv_relevance(title, summary):
+def arxiv_keywords():
+    """config 的 arxiv_keywords 非空就用它（轉小寫），否則（含 config 不存在或壞掉）用內建清單。"""
+    try:
+        kws = json.loads(CONFIG_PATH.read_text(encoding="utf-8")).get("arxiv_keywords")
+        kws = [k.strip().lower() for k in kws if isinstance(k, str) and k.strip()]
+    except (OSError, ValueError, AttributeError, TypeError):
+        return ARXIV_KEYWORDS
+    return kws or ARXIV_KEYWORDS
+
+
+def _arxiv_relevance(title, summary, keywords):
     """標題命中權重 3、摘要命中權重 1，回傳 (分數, 命中關鍵字)。"""
     t, a = title.lower(), summary.lower()
-    hits = [k for k in ARXIV_KEYWORDS if k in t or k in a]
+    hits = [k for k in keywords if k in t or k in a]
     score = sum(3 if k in t else 1 for k in hits)
     return score, hits
 
@@ -204,6 +216,7 @@ def _arxiv_relevance(title, summary):
 def fetch_arxiv(since, until):
     ns = {"a": "http://www.w3.org/2005/Atom"}
     out, start, page = [], 0, 200
+    keywords = arxiv_keywords()
     while start < 4000:  # 一週 cs.AI/CL/LG 約 2500 篇，保險上限
         q = urllib.parse.urlencode({
             "search_query": "cat:cs.AI OR cat:cs.CL OR cat:cs.LG",
@@ -224,7 +237,7 @@ def fetch_arxiv(since, until):
                 continue
             title = e.findtext("a:title", "", ns)
             summary = e.findtext("a:summary", "", ns)
-            score, hits = _arxiv_relevance(title, summary)
+            score, hits = _arxiv_relevance(title, summary, keywords)
             if score == 0:
                 continue
             authors = [a.findtext("a:name", "", ns) for a in e.findall("a:author", ns)]

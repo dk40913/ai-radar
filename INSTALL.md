@@ -26,10 +26,11 @@
 3. 有沒有 Parallel API key？（選用。只問有沒有，不要請他把 key 貼給你。）
 4. 要不要順便裝 Obsidian skills 套件（`obsidian@obsidian-skills`，讓 Claude Code 會寫 Obsidian 筆記格式、讀網頁、操作 vault；建議裝，ai-radar 本身不依賴它）。
 5. 只有你自己的 model ID 含 `fable` 時才問：告訴他 Fable 的額度消耗遠高於 Opus，而每週排程會沿用安裝時的模型、一次派 6 個 subagent；問他要沿用 Fable，還是改用 `claude-opus-5-5`（建議）。
+6. 週報要以誰的角度、關注哪些主題？（直接 Enter＝預設：AI Agent 工程師，關注 AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具）
 
 也順便提醒：每週的自動執行用的是他的 Claude Code 登入與方案額度，一次會派 6 個 subagent；Claude Code 要保持登入狀態，排程才跑得起來。
 
-完成條件：拿到存在的 vault 路徑、寄信與否（含 email）、有沒有 key、要不要裝 Obsidian skills；你是 Fable 時另有他選的模型。
+完成條件：拿到存在的 vault 路徑、寄信與否（含 email）、有沒有 key、要不要裝 Obsidian skills、讀者與關注主題（或用預設）；你是 Fable 時另有他選的模型。
 
 ## 3. 設定 Parallel MCP（只有使用者有 key 時）
 
@@ -74,11 +75,13 @@ claude plugin install obsidian@obsidian-skills
 git clone https://github.com/dk40913/ai-radar.git ~/project/ai-radar
 cd ~/project/ai-radar
 ./install.sh --vault "<vault 路徑>" --parallel <yes|no> \
-  [--mail-to <email>] --model <你自己目前的 model ID> --subagent-model <opus|sonnet|haiku>
+  [--mail-to <email>] --model <你自己目前的 model ID> --subagent-model <opus|sonnet|haiku> \
+  [--reader "<讀者>"] [--focus "<關注主題>"] [--arxiv-keywords "<k1,k2,...>"]
 ```
 
 - `--model`：填你自己這個 session 的 model ID，一字不差照你系統提示裡寫的抄，連後綴一起保留（例如 `claude-opus-5-5[1m]` 的 `[1m]` 不能拿掉）。這樣排程跑的是同一個模型。使用者在第 2 步選了改用 Opus 時，填 `claude-opus-5-5`，`--subagent-model` 填 `opus`。
 - `--subagent-model`：你的模型家族是 `opus`、`sonnet` 或 `haiku` 就填那個；其他家族一律填 `opus`。
+- `--reader`／`--focus`／`--arxiv-keywords`：第 2 步使用者用預設時三個都不帶。他給了自訂讀者或主題時，`--reader` 填讀者、`--focus` 填主題；再依主題產生 15–30 個英文小寫 arXiv 關鍵字（會拿來對論文標題與摘要做子字串比對，所以要用常見詞形，例如 `diffusion`、`medical imag`），先給使用者看、他同意後用逗號串起來傳給 `--arxiv-keywords`。
 - `install.sh` 重跑是安全的；它會檢查依賴，缺東西會列出來並以非 0 結束。
 
 完成條件：結尾印出 `ai-radar installed` 與設定摘要，`schedule` 那行是 `Saturday 09:00`。

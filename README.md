@@ -105,6 +105,7 @@ flowchart TD
 - `python3`、`uv`、`defuddle`（安裝時 Claude Code 會幫你檢查、問過你再補）
 - 選用：Parallel API key（抓網頁比較穩；沒有也能跑，改用備援抓取）
 - 選用：寄信需要 Mail.app 已登入寄件帳號
+- 已知上限：來源本身都是 AI 綜合來源，自訂讀者與主題只影響篩選、評分與撰稿角度；「GitHub AI Agent 週榜」固定是 agent 主題
 
 ## 安裝
 
@@ -112,7 +113,7 @@ flowchart TD
 
 > 照 `https://github.com/dk40913/ai-radar` 的 INSTALL.md 安裝 ai-radar
 
-它會問你幾件事（Obsidian vault 路徑、要不要寄信與寄到哪、有沒有 Parallel API key、要不要順便裝 Obsidian skills 套件；安裝它的若是 Fable，也會問你要不要改用 Opus 省額度），然後 clone、安裝、驗證。vault 路徑例如 `~/Documents/Obsidian`。
+它會問你幾件事（Obsidian vault 路徑、要不要寄信與寄到哪、有沒有 Parallel API key、要不要順便裝 Obsidian skills 套件、週報要以誰的角度與關注哪些主題（直接用預設＝AI Agent 工程師）；安裝它的若是 Fable，也會問你要不要改用 Opus 省額度），然後 clone、安裝、驗證。vault 路徑例如 `~/Documents/Obsidian`。
 
 Obsidian 這邊不用做任何設定，週報格式由 skill 產生。週報很長，想要「回到頂端」按鈕可以另裝社群插件 Scroll to Top（選用）。
 
@@ -121,7 +122,7 @@ Obsidian 這邊不用做任何設定，週報格式由 skill 產生。週報很�
 | 位置 | 內容 |
 |------|------|
 | `~/.claude/skills/ai-radar/` | skill 本體與腳本 |
-| `~/.claude/skills/ai-radar/config.json` | 設定：vault、收件者、模型、是否用 Parallel、工具所在目錄 |
+| `~/.claude/skills/ai-radar/config.json` | 設定：vault、收件者、模型、是否用 Parallel、工具所在目錄、讀者與關注主題 |
 | `~/.claude/skills/ai-radar/harness_profile.md` | 你的工作流現況（可自行改寫） |
 | `~/Library/LaunchAgents/com.<你的帳號>.ai-radar.plist` | 每週六 09:00 的排程 |
 | `~/.local/state/ai-radar/` | 上次執行時間與每次執行的中間檔 |
@@ -133,6 +134,10 @@ Obsidian 這邊不用做任何設定，週報格式由 skill 產生。週報很�
 ### 換模型
 
 排程用的模型是安裝時 `--model` 給的那個。要換的話，用新的 `--model` 重跑 `install.sh`（其他旗標照舊）；給空字串 `--model ""` 則改用 Claude Code 的預設模型。每次執行會派 6 個 subagent，它們用的模型由 `--subagent-model`（`opus`／`sonnet`／`haiku`）決定，換成較小的模型可以省額度。
+
+### 換主題
+
+週報的讀者與關注主題是安裝時 `--reader`、`--focus`、`--arxiv-keywords`（逗號分隔的 arXiv 篩選關鍵字）給的那些。要換的話，帶新的值重跑 `install.sh`；跟其他旗標一樣每次都要帶齊，不帶就回到預設（AI Agent 工程師，關注 AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具，arXiv 用內建關鍵字）。
 
 ### 第一次排程執行的權限
 

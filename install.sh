@@ -6,12 +6,14 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 USER_NAME="${USER:-$(id -un)}"
 
 VAULT=""; PARALLEL=""; MAIL_TO=""; MODEL=""; SUBAGENT_MODEL="opus"
+READER="AI Agent 工程師"; FOCUS="AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具"; ARXIV_KEYWORDS=""
 NO_LAUNCHD=0; SKIP_CHECKS=0
 
 die() { echo "error: $*" >&2; exit 1; }
 usage() {
   echo "usage: install.sh --vault PATH --parallel yes|no [--mail-to EMAIL] [--model ID]" >&2
-  echo "                  [--subagent-model opus|sonnet|haiku] [--no-launchd] [--skip-checks]" >&2
+  echo "                  [--subagent-model opus|sonnet|haiku] [--reader TEXT] [--focus TEXT]" >&2
+  echo "                  [--arxiv-keywords \"k1,k2,...\"] [--no-launchd] [--skip-checks]" >&2
 }
 
 while [ $# -gt 0 ]; do
@@ -21,6 +23,9 @@ while [ $# -gt 0 ]; do
     --mail-to) [ $# -ge 2 ] || die "--mail-to needs a value"; MAIL_TO="$2"; shift 2 ;;
     --model) [ $# -ge 2 ] || die "--model needs a value"; MODEL="$2"; shift 2 ;;
     --subagent-model) [ $# -ge 2 ] || die "--subagent-model needs a value"; SUBAGENT_MODEL="$2"; shift 2 ;;
+    --reader) [ $# -ge 2 ] || die "--reader needs a value"; READER="$2"; shift 2 ;;
+    --focus) [ $# -ge 2 ] || die "--focus needs a value"; FOCUS="$2"; shift 2 ;;
+    --arxiv-keywords) [ $# -ge 2 ] || die "--arxiv-keywords needs a value"; ARXIV_KEYWORDS="$2"; shift 2 ;;
     --no-launchd) NO_LAUNCHD=1; shift ;;
     --skip-checks) SKIP_CHECKS=1; shift ;;
     *) usage; die "unknown argument: $1" ;;
@@ -69,13 +74,16 @@ for tool in claude defuddle uv python3; do
 done
 
 AIR_PARALLEL="$PARALLEL" AIR_VAULT="$VAULT" AIR_MAIL_TO="$MAIL_TO" AIR_MODEL="$MODEL" \
-AIR_SUBAGENT="$SUBAGENT_MODEL" AIR_TOOL_DIRS="$TOOL_DIRS" python3 - "$DEST/config.json" <<'PY'
+AIR_SUBAGENT="$SUBAGENT_MODEL" AIR_TOOL_DIRS="$TOOL_DIRS" AIR_READER="$READER" AIR_FOCUS="$FOCUS" \
+AIR_ARXIV_KEYWORDS="$ARXIV_KEYWORDS" python3 - "$DEST/config.json" <<'PY'
 import json, os, sys
 dirs = list(dict.fromkeys(d for d in os.environ["AIR_TOOL_DIRS"].splitlines() if d))
 cfg = {"parallel": os.environ["AIR_PARALLEL"] == "yes", "vault": os.environ["AIR_VAULT"],
        "mail_to": os.environ["AIR_MAIL_TO"], "model": os.environ["AIR_MODEL"],
-       "subagent_model": os.environ["AIR_SUBAGENT"], "path_prepend": dirs}
-with open(sys.argv[1], "w") as f:
+       "subagent_model": os.environ["AIR_SUBAGENT"], "path_prepend": dirs,
+       "reader": os.environ["AIR_READER"], "focus": os.environ["AIR_FOCUS"],
+       "arxiv_keywords": [k.strip().lower() for k in os.environ["AIR_ARXIV_KEYWORDS"].split(",") if k.strip()]}
+with open(sys.argv[1], "w", encoding="utf-8") as f:
     json.dump(cfg, f, ensure_ascii=False)
 PY
 
@@ -137,4 +145,5 @@ echo "  vault:     $VAULT"
 echo "  mail:      ${MAIL_TO:-(disabled)}"
 echo "  parallel:  $PARALLEL"
 echo "  model:     ${MODEL:-(default)}  subagent: $SUBAGENT_MODEL"
+echo "  focus:     $READER — $FOCUS"
 if [ "$NO_LAUNCHD" -eq 0 ]; then echo "  schedule:  Saturday 09:00 ($LABEL)"; else echo "  schedule:  not loaded (--no-launchd)"; fi
