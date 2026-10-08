@@ -49,5 +49,13 @@ class ParallelPermissionTest(unittest.TestCase):
             self.assertIn(tool, allow)
 
 
+class ReactionsStepTest(unittest.TestCase):
+    def test_skill_md_has_reactions_step(self):
+        text = (REPO / "skill/SKILL.md").read_text(encoding="utf-8")
+        for needle in ("PARALLEL = `parallel`", "comment_v5/answers", "draft_reactions.md",
+                       "## 各地社群反應", "parallel_reactions"):
+            self.assertIn(needle, text)
+
+
 if __name__ == "__main__":
     unittest.main()

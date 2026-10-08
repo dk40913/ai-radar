@@ -283,12 +283,12 @@ def build_digest(fm, body_md):
                 out.append(f"   {plain(one.group(1))}")
         out.append("")
 
-    for sec in ("論文版", "產業與產品版", "開源與工具版", "GitHub AI Agent 週榜", "社群熱議版"):
+    for sec in ("論文版", "產業與產品版", "開源與工具版", "GitHub AI Agent 週榜", "社群熱議版", "各地社群反應"):
         content = sections.get(sec, "")
         groups = [(r, re.findall(r"^### (.+)$", md, flags=re.M)) for r, md in split_regions(content)]
         groups = [(r, ts) for r, ts in groups if ts]
         if groups:
-            out.append(f"【{sec}】" + "；".join((f"{r}：" if r else "") + "、".join(plain(t) for t in ts)
+            out.append(f"【{sec}】" + "；".join((f"{r}：" if r else "") + "、".join(re.sub(r"：社群反應$", "", plain(t)) for t in ts)
                                                for r, ts in groups))
     out.append("")
 
