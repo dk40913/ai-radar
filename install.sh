@@ -7,20 +7,21 @@ USER_NAME="${USER:-$(id -un)}"
 
 VAULT=""; MAIL_TO=""; MODEL=""; SUBAGENT_MODEL="opus"
 READER="AI Agent 工程師"; FOCUS="AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具"; ARXIV_KEYWORDS=""
-NO_LAUNCHD=0; SKIP_CHECKS=0; OBSIDIAN_ADDONS=0; PARALLEL="no"
+NO_LAUNCHD=0; SKIP_CHECKS=0; OBSIDIAN_ADDONS=0; PARALLEL="no"; THREADS="no"
 
 die() { echo "error: $*" >&2; exit 1; }
 usage() {
   echo "usage: install.sh --vault PATH [--mail-to EMAIL] [--model ID]" >&2
   echo "                  [--subagent-model opus|sonnet|haiku] [--reader TEXT] [--focus TEXT]" >&2
   echo "                  [--arxiv-keywords \"k1,k2,...\"] [--no-launchd] [--skip-checks]" >&2
-  echo "                  [--obsidian-addons] [--parallel yes|no]" >&2
+  echo "                  [--obsidian-addons] [--parallel yes|no] [--threads yes|no]" >&2
 }
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --vault) [ $# -ge 2 ] || die "--vault needs a value"; VAULT="$2"; shift 2 ;;
     --parallel) [ $# -ge 2 ] || die "--parallel needs a value"; PARALLEL="$2"; shift 2 ;;
+    --threads) [ $# -ge 2 ] || die "--threads needs a value"; THREADS="$2"; shift 2 ;;
     --mail-to) [ $# -ge 2 ] || die "--mail-to needs a value"; MAIL_TO="$2"; shift 2 ;;
     --model) [ $# -ge 2 ] || die "--model needs a value"; MODEL="$2"; shift 2 ;;
     --subagent-model) [ $# -ge 2 ] || die "--subagent-model needs a value"; SUBAGENT_MODEL="$2"; shift 2 ;;
@@ -44,6 +45,12 @@ case "$PARALLEL" in
   yes|no) ;;
   *) die "--parallel must be yes or no" ;;
 esac
+
+case "$THREADS" in
+  yes|no) ;;
+  *) die "--threads must be yes or no" ;;
+esac
+[ "$THREADS" = "no" ] || [ "$PARALLEL" = "yes" ] || die "--threads yes needs --parallel yes"
 
 VAULT="${VAULT/#\~/$HOME}"
 [ -d "$VAULT" ] || die "vault directory does not exist: $VAULT"
@@ -78,7 +85,7 @@ done
 
 AIR_VAULT="$VAULT" AIR_MAIL_TO="$MAIL_TO" AIR_MODEL="$MODEL" \
 AIR_SUBAGENT="$SUBAGENT_MODEL" AIR_TOOL_DIRS="$TOOL_DIRS" AIR_READER="$READER" AIR_FOCUS="$FOCUS" \
-AIR_ARXIV_KEYWORDS="$ARXIV_KEYWORDS" AIR_PARALLEL="$PARALLEL" python3 - "$DEST/config.json" <<'PY'
+AIR_ARXIV_KEYWORDS="$ARXIV_KEYWORDS" AIR_PARALLEL="$PARALLEL" AIR_THREADS="$THREADS" python3 - "$DEST/config.json" <<'PY'
 import json, os, sys
 dirs = list(dict.fromkeys(d for d in os.environ["AIR_TOOL_DIRS"].splitlines() if d))
 cfg = {"vault": os.environ["AIR_VAULT"],
@@ -86,7 +93,8 @@ cfg = {"vault": os.environ["AIR_VAULT"],
        "subagent_model": os.environ["AIR_SUBAGENT"], "path_prepend": dirs,
        "reader": os.environ["AIR_READER"], "focus": os.environ["AIR_FOCUS"],
        "arxiv_keywords": [k.strip().lower() for k in os.environ["AIR_ARXIV_KEYWORDS"].split(",") if k.strip()],
-       "parallel": os.environ["AIR_PARALLEL"] == "yes"}
+       "parallel": os.environ["AIR_PARALLEL"] == "yes",
+       "threads": os.environ["AIR_THREADS"] == "yes"}
 with open(sys.argv[1], "w", encoding="utf-8") as f:
     json.dump(cfg, f, ensure_ascii=False)
 PY
@@ -161,5 +169,6 @@ echo "  mail:      ${MAIL_TO:-(disabled)}"
 echo "  model:     ${MODEL:-(default)}  subagent: $SUBAGENT_MODEL"
 echo "  focus:     $READER — $FOCUS"
 echo "  parallel:  $PARALLEL"
+echo "  threads:   $THREADS"
 if [ "$NO_LAUNCHD" -eq 0 ]; then echo "  schedule:  Saturday 09:00 ($LABEL)"; else echo "  schedule:  not loaded (--no-launchd)"; fi
 if [ "$OBSIDIAN_ADDONS" -eq 1 ]; then echo "  obsidian:  addons copied (enable them in Obsidian)"; else echo "  obsidian:  no addons"; fi

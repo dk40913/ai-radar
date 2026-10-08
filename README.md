@@ -17,7 +17,7 @@
 5. GitHub AI Agent 週榜：本週新增星數最多的 5 個 agent 相關 repo
 6. 社群熱議版：HN、Reddit、PTT、掘金、V2EX 等討論，以及工程師的實作心得
 
-**各地社群反應（選用，需要 Parallel API key）**：另外在社群熱議版之後多一個版面，針對本週頭版的每一條，到知乎、Dcard、Reddit 搜尋本週的討論，摘要主要看法並引用代表性留言。只看頭版，留言是網友意見、未經查證。沒有 key 就沒有這個版面。
+**各地社群反應（選用，需要 Parallel API key）**：另外在社群熱議版之後多一個版面，針對本週頭版的每一條，到知乎、Dcard、Reddit 搜尋本週的討論，摘要主要看法並引用代表性留言。只看頭版，留言是網友意見、未經查證。沒有 key 就沒有這個版面。可另外開 Threads（試用，`--threads yes`）：只抓得到每篇的第一批回覆、互動數字沒有標籤，看過幾期再決定要不要留著，重裝時改 `--threads no` 即關閉。
 
 產業、開源、社群三個版面依來源地分成「外國／台灣／中國」三群。
 
@@ -50,7 +50,7 @@
 | 中國 | V2EX | 官方 API（內文＋回覆） | ✅ |
 | 中國 | 掘金 | 頁面要跑 JavaScript，直接補抓 | ✅ |
 
-Jina 有每分鐘次數上限，補抓多的週次會慢一些，偶爾讀不到的條目會改依摘要撰寫並標上「僅依摘要」。Medium 只收出版物 RSS 每個 feed 最新 10 篇（本站擋爬蟲）；Facebook、Threads、Instagram 擋抓取或要登入，沒有收錄；知乎、Dcard 不是候選來源，只在有 Parallel key 時用來看頭版的反應。
+Jina 有每分鐘次數上限，補抓多的週次會慢一些，偶爾讀不到的條目會改依摘要撰寫並標上「僅依摘要」。Medium 只收出版物 RSS 每個 feed 最新 10 篇（本站擋爬蟲）；Facebook、Instagram 擋抓取或要登入，沒有收錄；知乎、Dcard 不是候選來源，只在有 Parallel key 時用來看頭版的反應；Threads 也不是候選來源，只在開了 `--threads yes` 時用來看頭版的反應。
 
 如果你填了 `harness_profile.md`（你自己的 AI 工作流現況），能直接裝進你工作流的條目會多一個「可加進工作流」標記。
 
@@ -135,7 +135,7 @@ Obsidian 這邊不用做任何設定，週報格式由 skill 產生。想要週�
 | 位置 | 內容 |
 |------|------|
 | `~/.claude/skills/ai-radar/` | skill 本體與腳本 |
-| `~/.claude/skills/ai-radar/config.json` | 設定：vault、收件者、模型、是否用 Parallel、工具所在目錄、讀者與關注主題 |
+| `~/.claude/skills/ai-radar/config.json` | 設定：vault、收件者、模型、是否用 Parallel、是否加看 Threads、工具所在目錄、讀者與關注主題 |
 | `~/.claude/skills/ai-radar/harness_profile.md` | 你的工作流現況（可自行改寫） |
 | `~/Library/LaunchAgents/com.<你的帳號>.ai-radar.plist` | 每週六 09:00 的排程 |
 | `~/.local/state/ai-radar/` | 上次執行時間與每次執行的中間檔 |
@@ -176,7 +176,7 @@ Obsidian 這邊不用做任何設定，週報格式由 skill 產生。想要週�
 ```bash
 cd ~/project/ai-radar   # 你 clone 的位置
 git pull
-./install.sh --vault <同樣的 vault> --parallel <yes|no> [其他當初用的旗標]
+./install.sh --vault <同樣的 vault> --parallel <yes|no> --threads <yes|no> [其他當初用的旗標]
 ```
 
 重跑 `install.sh` 是安全的：設定檔依旗標重寫，`harness_profile.md` 與 vault 裡的 `CLAUDE.md` 不會被覆蓋。

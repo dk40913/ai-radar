@@ -57,7 +57,7 @@ class InstallTestCase(unittest.TestCase):
         self.assertEqual(self.config(), {
             "vault": str(self.vault), "mail_to": "",
             "model": "", "subagent_model": "opus", "reader": "AI Agent 工程師",
-            "focus": "AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具", "arxiv_keywords": [], "parallel": False})
+            "focus": "AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具", "arxiv_keywords": [], "parallel": False, "threads": False})
         self.assertTrue((self.home / ".local/state/ai-radar").is_dir())
 
     def test_settings_inside_home(self):
@@ -126,7 +126,7 @@ class InstallTestCase(unittest.TestCase):
         self.assertEqual(self.config(), {
             "vault": str(self.vault), "mail_to": "a@b.c",
             "model": "m1", "subagent_model": "sonnet", "reader": "AI Agent 工程師",
-            "focus": "AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具", "arxiv_keywords": [], "parallel": False})
+            "focus": "AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具", "arxiv_keywords": [], "parallel": False, "threads": False})
         self.assertEqual((self.skill / "harness_profile.md").read_text(), "mine")
         self.assertEqual((self.vault / "AI知識雷達/CLAUDE.md").read_text(), "mine too")
 
@@ -165,6 +165,24 @@ class InstallTestCase(unittest.TestCase):
         r = self.install("--vault", "~/Documents/Vault", "--parallel", "maybe")
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("--parallel must be yes or no", r.stderr)
+
+    def test_threads_flag(self):
+        r = self.default()
+        self.assertIs(self.config()["threads"], False)
+        self.assertIn("threads:   no", r.stdout)
+        r = self.ok("--vault", "~/Documents/Vault", "--parallel", "yes", "--threads", "yes")
+        self.assertIs(self.config()["threads"], True)
+        self.assertIn("threads:   yes", r.stdout)
+
+    def test_threads_flag_rejects_other_values(self):
+        r = self.install("--vault", "~/Documents/Vault", "--threads", "maybe")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("--threads must be yes or no", r.stderr)
+
+    def test_threads_yes_needs_parallel(self):
+        r = self.install("--vault", "~/Documents/Vault", "--threads", "yes")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("--threads yes needs --parallel yes", r.stderr)
 
     def test_obsidian_addons_copied(self):
         r = self.ok("--vault", "~/Documents/Vault", "--obsidian-addons")

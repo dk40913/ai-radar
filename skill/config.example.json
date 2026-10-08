@@ -1,1 +1,1 @@
-{"vault": "/Users/you/Documents/Obsidian", "mail_to": "", "model": "", "subagent_model": "opus", "path_prepend": ["/opt/homebrew/bin"], "reader": "AI Agent 工程師", "focus": "AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具", "arxiv_keywords": [], "parallel": false}
+{"vault": "/Users/you/Documents/Obsidian", "mail_to": "", "model": "", "subagent_model": "opus", "path_prepend": ["/opt/homebrew/bin"], "reader": "AI Agent 工程師", "focus": "AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具", "arxiv_keywords": [], "parallel": false, "threads": false}
