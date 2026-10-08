@@ -1,0 +1,77 @@
+/* 報紙風配色：對齊「AI 知識雷達」週報 HTML 的色票與字體。
+   Things 主題的 Style Settings 沒有背景色與標題字體選項，只能在這裡覆蓋。 */
+
+body {
+  --accent-h: 9;
+  --accent-s: 64%;
+  --accent-l: 34%;
+}
+
+.theme-light {
+  --color-base-00: #fbf9f4;
+  --color-base-05: #f7f4ec;
+  --color-base-10: #f4f1ea;
+  --color-base-20: #f1ede3;
+  --color-base-25: #ebe6d9;
+  --color-base-30: #d9d4c7;
+  --color-base-35: #cfc9b9;
+  --color-base-40: #b8b2a1;
+  --color-base-50: #9c9686;
+  --color-base-60: #6b675e;
+  --color-base-70: #4a4740;
+  --color-base-100: #1c1b18;
+
+  --text-normal: #1c1b18;
+  --text-muted: #6b675e;
+  --text-faint: #9c9686;
+  --text-formatted: #6b675e;
+
+  --background-modifier-hover: #efeade;
+  --background-modifier-border: #d9d4c7;
+  --background-modifier-cover: rgba(210, 204, 190, 0.45);
+  --hr-color: #d9d4c7;
+}
+
+.theme-dark {
+  --accent-l: 58%;
+  --accent-d: 58%;
+  --color-base-00: #1a1815;
+  --color-base-05: #201d19;
+  --color-base-10: #22201c;
+  --color-base-20: #2a2721;
+  --color-base-30: #3a3630;
+  --text-normal: #e8e3d8;
+  --text-muted: #9c9686;
+  --hr-color: #3a3630;
+}
+
+/* 內文與標題共用同一組襯線字型。
+   Songti TC 排最前面有兩個理由：它同時提供中文與西文字形，中英混排出自同一套設計；
+   而且它的數字是等高的，Georgia 的舊式數字會讓 2026-09-07 這種字串高低起伏。 */
+body {
+  --font-text: "Songti TC", "Noto Serif TC", Georgia, serif;
+}
+
+/* 標題與內文同一組字型，對齊週報的 masthead。
+   inline-title 需要 .workspace-leaf 前綴才蓋得過 app.css 的介面字型規則。 */
+.markdown-rendered h1,
+.markdown-rendered h2,
+.markdown-rendered h3,
+.markdown-source-view.mod-cm6 .HyperMD-header,
+.workspace-leaf .inline-title,
+.view-header-title {
+  font-family: "Songti TC", "Noto Serif TC", Georgia, serif;
+  letter-spacing: 0.04em;
+}
+
+/* h1 加報紙報頭的雙線 */
+.markdown-rendered h1,
+.inline-title {
+  border-top: 3px double var(--text-normal);
+  padding-top: 0.4em;
+}
+
+/* 行內引用塊左側粗邊條，對齊週報的 .oneliner */
+.markdown-rendered blockquote {
+  border-left: 4px solid var(--text-accent);
+}

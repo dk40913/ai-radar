@@ -1,0 +1,9 @@
+{
+	"id": "note-nav-buttons",
+	"name": "Note Nav Buttons",
+	"version": "1.0.0",
+	"minAppVersion": "1.0.0",
+	"description": "右下角三顆按鈕：回頂端、目錄（目前筆記的標題清單）、到底端。",
+	"author": "ai-radar",
+	"isDesktopOnly": false
+}

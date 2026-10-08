@@ -1,0 +1,21 @@
+{
+  "things-style@@fancy-code": true,
+  "things-style@@active-line": false,
+  "things-style@@heading-underline-color": true,
+  "things-style@@link-decoration": "Underline",
+  "things-style@@link-external-decoration": "Underline",
+  "things-style@@strong-color": "#8c2f1f",
+  "things-style@@em-color": "#8a6d1a",
+  "things-style@@quote-color": "#6b675e",
+  "things-style@@quote-background": "rgba(241, 237, 227, 0.55)",
+  "things-style@@text-highlight-bg-l": "rgba(212, 175, 55, 0.32)",
+  "things-style@@text-highlight-bg-d": "rgba(212, 175, 55, 0.26)",
+  "things-style@@code-block-background-l": "#f4f1ea",
+  "things-style@@code-background-l": "#f1ede3",
+  "things-style@@code-block-background-d": "#22201c",
+  "things-style@@code-background-d": "#2a2721",
+  "things-style@@tag-background-color-l": "#f1ede3",
+  "things-style@@tag-font-color-l": "#8c2f1f",
+  "things-style@@tag-background-color-d": "#3a2f28",
+  "things-style@@tag-font-color-d": "#e0c9b8"
+}
