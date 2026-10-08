@@ -180,7 +180,7 @@ subagent 失敗或回報異常時重派一次；仍失敗則該版面寫「本�
 - frontmatter：`title`、`date`、`tags`（`type/journal`、`AI`、`radar`）、`period_start`、`period_end`（台北日期）、`item_count`、`sources_failed`
 - `# AI 知識雷達 <日期>` 與 `> 涵蓋 <台北時間 SINCE> 至 <台北時間 UNTIL>`
 - `## 頭版` 前先寫一段 150–300 字的**本週導讀**，串起本週最重要的 2–3 條線索
-- 依序 `## 頭版`、`## 論文版`、`## 產業與產品版`、`## 開源與工具版`、`## GitHub AI Agent 週榜`、`## 社群熱議版`、`## 各地社群反應`（有才放，見下）、貼入各 draft；`item_count` 包含週榜的 5 條
+- 依序 `## 頭版`、`## 論文版`、`## 產業與產品版`、`## 開源與工具版`、`## GitHub AI Agent 週榜`、`## 社群熱議版`、`## 各地社群反應`（有才放，見下），貼入各 draft；`item_count` 包含週榜的 5 條
 - `## 各地社群反應`：放在 `## 社群熱議版` 之後、`## 本週值得跟進` 之前，只在 `draft_reactions.md` 存在且有 `###` 段落時才放。版面開頭一行 `> [!info] 依本週頭版搜尋知乎、Dcard、Reddit 的討論，留言是網友意見，未經查證。`，接著貼 draft。檔案不存在、內容是 `PARALLEL_UNAVAILABLE`、或沒有 `###` 段落時不放這個版面；PARALLEL 為 true 卻沒產出時，在 `sources_failed` 加 `parallel_reactions`。`item_count` 不計這個版面
 - `## 本週值得跟進`：3–5 個具體行動項目（值得試的工具、值得讀的論文、值得追的產品），每項一兩句說明為什麼
 - `## 附錄：其他掃到的項目`：從 `appendix.json` 每條一行 `- [標題](url) — 一句話`
