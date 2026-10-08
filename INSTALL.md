@@ -25,10 +25,11 @@
 3. 要不要順便裝 Obsidian skills 套件（`obsidian@obsidian-skills`，讓 Claude Code 會寫 Obsidian 筆記格式、讀網頁、操作 vault；建議裝，ai-radar 本身不依賴它）。
 4. 只有你自己的 model ID 含 `fable` 時才問：告訴他 Fable 的額度消耗遠高於 Opus，而每週排程會沿用安裝時的模型、一次派 6 個 subagent；問他要沿用 Fable，還是改用 `claude-opus-5-5`（建議）。
 5. 週報要以誰的角度、關注哪些主題？（直接 Enter＝預設：AI Agent 工程師，關注 AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具）
+6. 要不要一併裝 Obsidian 的週報外觀與導覽按鈕？（選用：右下角回頂端／目錄／到底端按鈕，以及報紙風配色。配色會套用到整個 vault。）
 
 也順便提醒：每週的自動執行用的是他的 Claude Code 登入與方案額度，一次會派 6 個 subagent；Claude Code 要保持登入狀態，排程才跑得起來。
 
-完成條件：拿到存在的 vault 路徑、寄信與否（含 email）、要不要裝 Obsidian skills、讀者與關注主題（或用預設）；你是 Fable 時另有他選的模型。
+完成條件：拿到存在的 vault 路徑、寄信與否（含 email）、要不要裝 Obsidian skills、讀者與關注主題（或用預設）、要不要裝 Obsidian 外觀與導覽按鈕；你是 Fable 時另有他選的模型。
 
 ## 3. 補依賴
 
@@ -60,12 +61,14 @@ git clone https://github.com/dk40913/ai-radar.git ~/project/ai-radar
 cd ~/project/ai-radar
 ./install.sh --vault "<vault 路徑>" \
   [--mail-to <email>] --model <你自己目前的 model ID> --subagent-model <opus|sonnet|haiku> \
-  [--reader "<讀者>"] [--focus "<關注主題>"] [--arxiv-keywords "<k1,k2,...>"]
+  [--reader "<讀者>"] [--focus "<關注主題>"] [--arxiv-keywords "<k1,k2,...>"] \
+  [--obsidian-addons]
 ```
 
 - `--model`：填你自己這個 session 的 model ID，一字不差照你系統提示裡寫的抄，連後綴一起保留（例如 `claude-opus-5-5[1m]` 的 `[1m]` 不能拿掉）。這樣排程跑的是同一個模型。使用者在第 2 步選了改用 Opus 時，填 `claude-opus-5-5`，`--subagent-model` 填 `opus`。
 - `--subagent-model`：你的模型家族是 `opus`、`sonnet` 或 `haiku` 就填那個；其他家族一律填 `opus`。
 - `--reader`／`--focus`／`--arxiv-keywords`：第 2 步使用者用預設時三個都不帶。他自訂了讀者就用 `--reader` 填讀者；自訂了關注主題就用 `--focus` 填主題，並依主題產生 15–30 個英文小寫 arXiv 關鍵字（會拿來對論文標題與摘要做子字串比對，所以要用常見詞形，例如 `diffusion`、`medical imag`），先給使用者看、他同意後用逗號串起來傳給 `--arxiv-keywords`。只改讀者、主題沿用預設時，不帶 `--focus` 與 `--arxiv-keywords`。
+- `--obsidian-addons`：使用者在第 2 步要裝 Obsidian 外觀與導覽按鈕時才帶。它只把檔案複製進 vault 的 `.obsidian/`，不會啟用；啟用步驟在第 7 步告訴使用者。
 - `install.sh` 重跑是安全的；它會檢查依賴，缺東西會列出來並以非 0 結束。
 
 完成條件：結尾印出 `ai-radar installed` 與設定摘要，`schedule` 那行是 `Saturday 09:00`。
@@ -113,5 +116,9 @@ nohup ~/.claude/skills/ai-radar/scripts/run.sh >/dev/null 2>&1 &
 - `~/.claude/skills/ai-radar/harness_profile.md` 是他的 AI 工作流現況範本。照裡面的 `（填：…）` 改寫成自己的環境後，週報裡能裝進他工作流的條目會加上「可加進工作流」標記；不填或刪掉這個檔案，就不會有這個標記。
 - 排程：每週六 09:00；log 在 `~/Library/Logs/ai-radar.log`。
 - 更新與移除方式寫在 repo 的 `README.md`。
+- 第 4 步帶了 `--obsidian-addons` 時，另外請使用者在 Obsidian 裡依序完成（Obsidian 執行中改設定檔會被覆寫，所以這幾步要他自己點）：
+  1. 設定 → 社群插件：關閉「限制模式」，在已安裝插件裡啟用「Note Nav Buttons」。
+  2. 設定 → 外觀 → CSS 片段：按重新整理，啟用 `newspaper`。
+  3. （要完全一樣的外觀才需要）設定 → 外觀 → 主題：瀏覽並安裝、套用「Things」；設定 → 社群插件 → 瀏覽：安裝並啟用「Style Settings」，到 Style Settings 的設定頁按 Import，貼上 repo 裡 `obsidian/style-settings.json` 的內容。
 
-完成條件：以上三點都已告知使用者。
+完成條件：以上各點都已告知使用者（Obsidian 那一點只在帶了 `--obsidian-addons` 時需要）。

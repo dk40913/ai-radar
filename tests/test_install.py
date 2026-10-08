@@ -158,6 +158,40 @@ class InstallTestCase(unittest.TestCase):
         self.assertNotIn("parallel", self.config())
         self.assertIn("no longer used", r.stderr)
 
+    def test_obsidian_addons_copied(self):
+        r = self.ok("--vault", "~/Documents/Vault", "--obsidian-addons")
+        plugin = self.vault / ".obsidian/plugins/note-nav-buttons"
+        for name in ("manifest.json", "main.js", "styles.css"):
+            self.assertEqual((plugin / name).read_bytes(),
+                             (REPO / "obsidian/plugins/note-nav-buttons" / name).read_bytes())
+        css = self.vault / ".obsidian/snippets/newspaper.css"
+        self.assertEqual(css.read_bytes(), (REPO / "obsidian/snippets/newspaper.css").read_bytes())
+        self.assertIn("obsidian:  addons copied (enable them in Obsidian)", r.stdout)
+        self.assertFalse((self.vault / ".obsidian/community-plugins.json").exists())
+        self.assertFalse((self.vault / ".obsidian/appearance.json").exists())
+
+    def test_obsidian_addons_keep_existing_snippet_and_overwrite_plugin(self):
+        snippets = self.vault / ".obsidian/snippets"
+        snippets.mkdir(parents=True)
+        (snippets / "newspaper.css").write_text("mine")
+        plugin = self.vault / ".obsidian/plugins/note-nav-buttons"
+        plugin.mkdir(parents=True)
+        (plugin / "main.js").write_text("stale")
+        (self.vault / ".obsidian/appearance.json").write_text("{}")
+        r = self.ok("--vault", "~/Documents/Vault", "--obsidian-addons")
+        self.assertEqual((snippets / "newspaper.css").read_text(), "mine")
+        self.assertIn("kept existing", r.stdout)
+        self.assertEqual((plugin / "main.js").read_bytes(),
+                         (REPO / "obsidian/plugins/note-nav-buttons/main.js").read_bytes())
+        self.assertEqual((self.vault / ".obsidian/appearance.json").read_text(), "{}")
+        self.assertFalse((self.vault / ".obsidian/community-plugins.json").exists())
+
+    def test_no_obsidian_addons_by_default(self):
+        r = self.default()
+        self.assertFalse((self.vault / ".obsidian/plugins/note-nav-buttons").exists())
+        self.assertFalse((self.vault / ".obsidian/snippets/newspaper.css").exists())
+        self.assertIn("obsidian:  no addons", r.stdout)
+
     def test_errors(self):
         self.assertNotEqual(self.install("--mail-to", "a@b.c").returncode, 0)
         self.assertNotEqual(self.install("--vault", str(self.tmp / "nope")).returncode, 0)

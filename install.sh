@@ -7,13 +7,14 @@ USER_NAME="${USER:-$(id -un)}"
 
 VAULT=""; MAIL_TO=""; MODEL=""; SUBAGENT_MODEL="opus"
 READER="AI Agent 工程師"; FOCUS="AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具"; ARXIV_KEYWORDS=""
-NO_LAUNCHD=0; SKIP_CHECKS=0
+NO_LAUNCHD=0; SKIP_CHECKS=0; OBSIDIAN_ADDONS=0
 
 die() { echo "error: $*" >&2; exit 1; }
 usage() {
   echo "usage: install.sh --vault PATH [--mail-to EMAIL] [--model ID]" >&2
   echo "                  [--subagent-model opus|sonnet|haiku] [--reader TEXT] [--focus TEXT]" >&2
   echo "                  [--arxiv-keywords \"k1,k2,...\"] [--no-launchd] [--skip-checks]" >&2
+  echo "                  [--obsidian-addons]" >&2
 }
 
 while [ $# -gt 0 ]; do
@@ -28,6 +29,7 @@ while [ $# -gt 0 ]; do
     --arxiv-keywords) [ $# -ge 2 ] || die "--arxiv-keywords needs a value"; ARXIV_KEYWORDS="$2"; shift 2 ;;
     --no-launchd) NO_LAUNCHD=1; shift ;;
     --skip-checks) SKIP_CHECKS=1; shift ;;
+    --obsidian-addons) OBSIDIAN_ADDONS=1; shift ;;
     *) usage; die "unknown argument: $1" ;;
   esac
 done
@@ -114,6 +116,17 @@ if [ ! -e "$VAULT/AI知識雷達/CLAUDE.md" ]; then
   cp "$REPO/vault-template/AI知識雷達/CLAUDE.md" "$VAULT/AI知識雷達/CLAUDE.md"
 fi
 
+# Copy files only; enabling them is left to the user inside Obsidian (it rewrites its own config while running).
+if [ "$OBSIDIAN_ADDONS" -eq 1 ]; then
+  mkdir -p "$VAULT/.obsidian/plugins/note-nav-buttons" "$VAULT/.obsidian/snippets"
+  cp "$REPO/obsidian/plugins/note-nav-buttons/"* "$VAULT/.obsidian/plugins/note-nav-buttons/"
+  if [ -e "$VAULT/.obsidian/snippets/newspaper.css" ]; then
+    echo "kept existing $VAULT/.obsidian/snippets/newspaper.css"
+  else
+    cp "$REPO/obsidian/snippets/newspaper.css" "$VAULT/.obsidian/snippets/newspaper.css"
+  fi
+fi
+
 LABEL="com.$USER_NAME.ai-radar"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 mkdir -p "$HOME/Library/LaunchAgents" "$HOME/Library/Logs"
@@ -142,3 +155,4 @@ echo "  mail:      ${MAIL_TO:-(disabled)}"
 echo "  model:     ${MODEL:-(default)}  subagent: $SUBAGENT_MODEL"
 echo "  focus:     $READER — $FOCUS"
 if [ "$NO_LAUNCHD" -eq 0 ]; then echo "  schedule:  Saturday 09:00 ($LABEL)"; else echo "  schedule:  not loaded (--no-launchd)"; fi
+if [ "$OBSIDIAN_ADDONS" -eq 1 ]; then echo "  obsidian:  addons copied (enable them in Obsidian)"; else echo "  obsidian:  no addons"; fi

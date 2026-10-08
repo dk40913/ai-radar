@@ -101,6 +101,7 @@ flowchart TD
 - 方案額度要夠：一次執行會派 6 個 subagent 平行研究，約 30–60 分鐘
 - `python3`、`uv`、`defuddle`（安裝時 Claude Code 會幫你檢查、問過你再補）
 - 選用：寄信需要 Mail.app 已登入寄件帳號
+- Obsidian：週報只用內建功能（callout、wikilink、frontmatter），不用裝任何東西。外觀與導覽按鈕是選用，見下方「Obsidian 外觀與導覽（選用）」
 - 已知上限：來源本身都是 AI 綜合來源，自訂讀者與主題只影響篩選、評分與撰稿角度；「GitHub AI Agent 週榜」固定是 agent 主題
 
 ## 安裝
@@ -111,7 +112,20 @@ flowchart TD
 
 它會問你幾件事（Obsidian vault 路徑、要不要寄信與寄到哪、要不要順便裝 Obsidian skills 套件、週報要以誰的角度與關注哪些主題（直接用預設＝AI Agent 工程師）；安裝它的若是 Fable，也會問你要不要改用 Opus 省額度），然後 clone、安裝、驗證。vault 路徑例如 `~/Documents/Obsidian`。
 
-Obsidian 這邊不用做任何設定，週報格式由 skill 產生。週報很長，想要「回到頂端」按鈕可以另裝社群插件 Scroll to Top（選用）。
+Obsidian 這邊不用做任何設定，週報格式由 skill 產生。想要週報截圖裡的外觀與導覽按鈕，安裝時帶 `--obsidian-addons`（或在安裝問答時回答要），會把插件與 CSS 片段一併複製進 vault；複製後還要在 Obsidian 裡啟用，見下一節。
+
+## Obsidian 外觀與導覽（選用）
+
+週報本身不依賴下面任何一項，沒裝也能正常產生與閱讀。`newspaper` 片段的配色會套用到整個 vault，不只週報；Note Nav Buttons 適用任何筆記。
+
+| 項目 | 是什麼 | 從哪裡來 | 怎麼裝 |
+|------|--------|----------|--------|
+| Note Nav Buttons 插件 | 右下角 ↑ ☰ ↓ 按鈕：回頂端、跳出目前筆記的標題清單、到底端 | 本 repo 的 `obsidian/plugins/note-nav-buttons/`（不在社群插件市集） | `install.sh --obsidian-addons` 複製進 vault；再到 Obsidian 設定 → 社群插件，關閉「限制模式」並啟用「Note Nav Buttons」 |
+| `newspaper` CSS 片段 | 報紙風配色與標題字體 | 本 repo 的 `obsidian/snippets/newspaper.css` | `install.sh --obsidian-addons` 複製進 vault（已有同名檔案則保留）；再到設定 → 外觀 → CSS 片段，按重新整理並啟用 `newspaper` |
+| Things 主題 | 截圖用的底層主題 | Obsidian 社群主題 | 設定 → 外觀 → 主題 → 瀏覽，安裝並套用「Things」（`install.sh` 不會幫你裝） |
+| Style Settings 插件＋設定檔 | 調整 Things 主題的選項；設定檔是作者用的 19 項設定 | 插件來自社群插件；設定檔是本 repo 的 `obsidian/style-settings.json` | 設定 → 社群插件 → 瀏覽，安裝並啟用「Style Settings」；到它的設定頁按 Import，貼上設定檔內容 |
+
+要和截圖完全一樣需要四項都裝；只想要導覽按鈕或配色，裝前兩項即可。
 
 ## 安裝後的檔案
 
@@ -124,6 +138,8 @@ Obsidian 這邊不用做任何設定，週報格式由 skill 產生。週報很�
 | `~/.local/state/ai-radar/` | 上次執行時間與每次執行的中間檔 |
 | `~/Library/Logs/ai-radar.log` | 執行 log |
 | `<vault>/AI知識雷達/` | 週報、圖片與該資料夾的撰寫規範 `CLAUDE.md` |
+| `<vault>/.obsidian/plugins/note-nav-buttons/` | 導覽按鈕插件（帶 `--obsidian-addons` 時） |
+| `<vault>/.obsidian/snippets/newspaper.css` | 報紙風 CSS 片段（帶 `--obsidian-addons` 時） |
 
 `config.json` 裡 `mail_to` 留空＝不寄信；`model` 留空＝用 Claude Code 預設模型；`path_prepend` 是安裝時找到 `claude`、`defuddle`、`uv`、`python3` 的目錄，排程執行時會放在 PATH 最前面（之後搬動或重裝這些工具，就重跑 `install.sh`）。
 
@@ -170,7 +186,7 @@ rm ~/Library/LaunchAgents/com.$USER.ai-radar.plist
 rm -rf ~/.claude/skills/ai-radar ~/.local/state/ai-radar
 ```
 
-vault 裡的 `AI知識雷達/` 資料夾是你的週報，要留要刪自己決定。
+vault 裡的 `AI知識雷達/` 資料夾是你的週報，要留要刪自己決定。如果裝過 Obsidian 外觀與導覽，在 Obsidian 裡停用並刪除 `note-nav-buttons` 插件與 `newspaper` 片段。
 
 ## 授權
 

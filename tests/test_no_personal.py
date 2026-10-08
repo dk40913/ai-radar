@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-SCAN = [REPO / "skill", REPO / "vault-template", REPO / "launchd", REPO / "install.sh",
+SCAN = [REPO / "skill", REPO / "vault-template", REPO / "launchd", REPO / "obsidian", REPO / "install.sh",
         REPO / "README.md", REPO / "INSTALL.md"]
 FORBIDDEN = ["/Users/herb", "dk40913@", "Herb", "Documents/Obsidian"]
 # Documents/Obsidian is allowed only as an example default vault path.
