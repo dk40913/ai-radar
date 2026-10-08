@@ -4,7 +4,8 @@
 
 三條規則全程適用：
 
-- 安裝任何依賴、執行第 6 步的完整試跑之前，都要先問使用者並取得同意。
+- 安裝任何依賴、執行第 7 步的完整試跑之前，都要先問使用者並取得同意。
+- Parallel API key 絕對不能出現在你寫的任何檔案、log、指令輸出或對話摘要裡；它只能由使用者自己輸入。
 - 某一步失敗就停下來，把錯誤訊息原文告訴使用者，不要跳過、不要自行改 repo 裡的檔案繞過去。
 
 ## 1. 確認環境
@@ -25,13 +26,30 @@
 3. 要不要順便裝 Obsidian skills 套件（`obsidian@obsidian-skills`，讓 Claude Code 會寫 Obsidian 筆記格式、讀網頁、操作 vault；建議裝，ai-radar 本身不依賴它）。
 4. 只有你自己的 model ID 含 `fable` 時才問：告訴他 Fable 的額度消耗遠高於 Opus，而每週排程會沿用安裝時的模型、一次派 6 個 subagent；問他要沿用 Fable，還是改用 `claude-opus-5-5`（建議）。
 5. 週報要以誰的角度、關注哪些主題？（直接 Enter＝預設：AI Agent 工程師，關注 AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具）
-6. 要不要一併裝 Obsidian 的週報外觀與導覽按鈕？（選用：右下角回頂端／目錄／到底端按鈕，以及報紙風配色。配色會套用到整個 vault。）
+6. 有沒有 Parallel API key？（選用。有的話週報會多一個版面：本週頭版在知乎、Dcard、Reddit 的討論與留言摘要。只問有沒有，不要請他把 key 貼給你。）
+7. 要不要一併裝 Obsidian 的週報外觀與導覽按鈕？（選用：右下角回頂端／目錄／到底端按鈕，以及報紙風配色。配色會套用到整個 vault。）
 
 也順便提醒：每週的自動執行用的是他的 Claude Code 登入與方案額度，一次會派 6 個 subagent；Claude Code 要保持登入狀態，排程才跑得起來。
 
-完成條件：拿到存在的 vault 路徑、寄信與否（含 email）、要不要裝 Obsidian skills、讀者與關注主題（或用預設）、要不要裝 Obsidian 外觀與導覽按鈕；你是 Fable 時另有他選的模型。
+完成條件：拿到存在的 vault 路徑、寄信與否（含 email）、要不要裝 Obsidian skills、讀者與關注主題（或用預設）、有沒有 key、要不要裝 Obsidian 外觀與導覽按鈕；你是 Fable 時另有他選的模型。
 
-## 3. 補依賴
+## 3. 設定 Parallel MCP（只有使用者有 key 時）
+
+這一步只為了「各地社群反應」版面；讀原文的補抓一律用 Jina Reader，與 Parallel 無關。
+
+執行 `claude mcp list`。列表裡已有 `Parallel-Search-MCP` 時不用再設定：跟使用者確認他要讓 ai-radar 使用它，確認後第 5 步帶 `--parallel yes`，然後進第 4 步。
+
+沒有的話，把下面這條指令給使用者，請他把 `<KEY>` 換成自己的 key 後，自己另開一個終端機視窗執行。不要由你代為執行，也不要請他在 Claude Code 輸入框用 `!` 執行，因為那樣 key 會進到你的對話紀錄：
+
+```bash
+claude mcp add --transport http --scope user Parallel-Search-MCP https://search.parallel.ai/mcp --header "x-api-key: <KEY>"
+```
+
+MCP 名稱必須一字不差是 `Parallel-Search-MCP`（skill 用這個名稱呼叫工具）。
+
+完成條件：`claude mcp list` 出現 `Parallel-Search-MCP`。第 5 步帶 `--parallel yes`；沒有 key 則跳過這步、帶 `--parallel no`。
+
+## 4. 補依賴
 
 逐一檢查 `command -v python3 uv defuddle git`。缺的列給使用者看，取得同意後再裝：
 
@@ -52,14 +70,14 @@ claude plugin install obsidian@obsidian-skills
 
 完成條件：四個指令都找得到；要裝 Obsidian skills 時 `claude plugin list` 出現 `obsidian@obsidian-skills`。
 
-## 4. Clone 並執行 install.sh
+## 5. Clone 並執行 install.sh
 
 預設 clone 到 `~/project/ai-radar`；使用者指定別處就用他的。資料夾已存在而且是這個 repo 時，改成 `git pull`。
 
 ```bash
 git clone https://github.com/dk40913/ai-radar.git ~/project/ai-radar
 cd ~/project/ai-radar
-./install.sh --vault "<vault 路徑>" \
+./install.sh --vault "<vault 路徑>" --parallel <yes|no> \
   [--mail-to <email>] --model <你自己目前的 model ID> --subagent-model <opus|sonnet|haiku> \
   [--reader "<讀者>"] [--focus "<關注主題>"] [--arxiv-keywords "<k1,k2,...>"] \
   [--obsidian-addons]
@@ -67,18 +85,19 @@ cd ~/project/ai-radar
 
 - `--model`：填你自己這個 session 的 model ID，一字不差照你系統提示裡寫的抄，連後綴一起保留（例如 `claude-opus-5-5[1m]` 的 `[1m]` 不能拿掉）。這樣排程跑的是同一個模型。使用者在第 2 步選了改用 Opus 時，填 `claude-opus-5-5`，`--subagent-model` 填 `opus`。
 - `--subagent-model`：你的模型家族是 `opus`、`sonnet` 或 `haiku` 就填那個；其他家族一律填 `opus`。
+- `--parallel`：第 3 步完成（`claude mcp list` 有 `Parallel-Search-MCP`）就填 `yes`，否則 `no`。`yes` 時週報多「各地社群反應」版面。
 - `--reader`／`--focus`／`--arxiv-keywords`：第 2 步使用者用預設時三個都不帶。他自訂了讀者就用 `--reader` 填讀者；自訂了關注主題就用 `--focus` 填主題，並依主題產生 15–30 個英文小寫 arXiv 關鍵字（會拿來對論文標題與摘要做子字串比對，所以要用常見詞形，例如 `diffusion`、`medical imag`），先給使用者看、他同意後用逗號串起來傳給 `--arxiv-keywords`。只改讀者、主題沿用預設時，不帶 `--focus` 與 `--arxiv-keywords`。
-- `--obsidian-addons`：使用者在第 2 步要裝 Obsidian 外觀與導覽按鈕時才帶。它只把檔案複製進 vault 的 `.obsidian/`，不會啟用；啟用步驟在第 7 步告訴使用者。
+- `--obsidian-addons`：使用者在第 2 步要裝 Obsidian 外觀與導覽按鈕時才帶。它只把檔案複製進 vault 的 `.obsidian/`，不會啟用；啟用步驟在第 8 步告訴使用者。
 - `install.sh` 重跑是安全的；它會檢查依賴，缺東西會列出來並以非 0 結束。
 
 完成條件：結尾印出 `ai-radar installed` 與設定摘要，`schedule` 那行是 `Saturday 09:00`。
 
-## 5. 驗證
+## 6. 驗證
 
-在第 4 步的 repo 目錄裡跑 skill 的測試：
+在第 5 步的 repo 目錄裡跑 skill 的測試：
 
 ```bash
-cd "<第 4 步的 repo 目錄>/skill" && uv run --quiet --with markdown python3 -m unittest discover -s tests
+cd "<第 5 步的 repo 目錄>/skill" && uv run --quiet --with markdown python3 -m unittest discover -s tests
 ```
 
 完成條件：輸出 `OK`。
@@ -95,7 +114,7 @@ printf 'ai-radar 安裝測試信\n' > "$BODY"
 
 完成條件：指令印出 `sent: ai-radar 測試 -> <email>`，並請使用者確認收到信。
 
-## 6. （選用）跑第一期週報
+## 7. （選用）跑第一期週報
 
 先問使用者要不要現在跑一次，並告知約需 30–60 分鐘、會消耗不少方案額度。同意才執行。
 
@@ -109,14 +128,14 @@ nohup ~/.claude/skills/ai-radar/scripts/run.sh >/dev/null 2>&1 &
 
 完成條件：`<vault>/AI知識雷達/` 出現今天日期的週報；或使用者選擇不跑，等週六自動執行。
 
-## 7. 收尾說明
+## 8. 收尾說明
 
 告訴使用者：
 
 - `~/.claude/skills/ai-radar/harness_profile.md` 是他的 AI 工作流現況範本。照裡面的 `（填：…）` 改寫成自己的環境後，週報裡能裝進他工作流的條目會加上「可加進工作流」標記；不填或刪掉這個檔案，就不會有這個標記。
 - 排程：每週六 09:00；log 在 `~/Library/Logs/ai-radar.log`。
 - 更新與移除方式寫在 repo 的 `README.md`。
-- 第 4 步帶了 `--obsidian-addons` 時，另外請使用者在 Obsidian 裡依序完成（Obsidian 執行中改設定檔會被覆寫，所以這幾步要他自己點）：
+- 第 5 步帶了 `--obsidian-addons` 時，另外請使用者在 Obsidian 裡依序完成（Obsidian 執行中改設定檔會被覆寫，所以這幾步要他自己點）：
   1. 設定 → 社群插件：關閉「限制模式」，在已安裝插件裡啟用「Note Nav Buttons」。
   2. 設定 → 外觀 → CSS 片段：按重新整理，啟用 `newspaper`。
   3. （要完全一樣的外觀才需要）設定 → 外觀 → 主題：瀏覽並安裝、套用「Things」；設定 → 社群插件 → 瀏覽：安裝並啟用「Style Settings」，到 Style Settings 的設定頁按 Import，貼上 repo 裡 `obsidian/style-settings.json` 的內容。

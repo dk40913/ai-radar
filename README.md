@@ -1,6 +1,6 @@
 # ai-radar：AI 知識雷達週報
 
-> **English** — ai-radar is a Claude Code skill that runs unattended every Saturday on macOS. It scans the past week's AI papers, news, open-source projects and developer discussions across English, Taiwanese and Simplified-Chinese sources (12 sources, several hundred candidates). It picks the items that matter for AI agent engineers, sends six concurrent subagents to read each original source in full, and writes a newspaper-style weekly report into an Obsidian vault. It can also mail a short digest with a self-contained HTML edition. It runs through `claude -p` with a permission allowlist instead of skipping permissions. It retries once on failure and treats a run as successful only when its state file advances. Installation is agent-driven: hand this repo's URL to Claude Code and it follows [`INSTALL.md`](INSTALL.md).
+> **English** — ai-radar is a Claude Code skill that runs unattended every Saturday on macOS. It scans the past week's AI papers, news, open-source projects and developer discussions across English, Taiwanese and Simplified-Chinese sources (12 sources, several hundred candidates). It picks the items that matter for AI agent engineers, sends six concurrent subagents to read each original source in full, and writes a newspaper-style weekly report into an Obsidian vault. With an optional Parallel API key it adds a community-reactions section that summarizes how Zhihu, Dcard and Reddit discussed the week's front-page items. It can also mail a short digest with a self-contained HTML edition. It runs through `claude -p` with a permission allowlist instead of skipping permissions. It retries once on failure and treats a run as successful only when its state file advances. Installation is agent-driven: hand this repo's URL to Claude Code and it follows [`INSTALL.md`](INSTALL.md).
 
 ![週報開頭：導讀與目錄](docs/images/report.png)
 
@@ -8,7 +8,7 @@
 
 ## 週報長什麼樣子
 
-每期一個檔案：`<vault>/AI知識雷達/<日期> AI知識雷達.md`，開頭是本週導讀與目錄，接著六個版面：
+每期一個檔案：`<vault>/AI知識雷達/<日期> AI知識雷達.md`，開頭是本週導讀與目錄，接著六個版面（有 Parallel key 時多一個）：
 
 1. 頭版：本週最重要的 1–3 件事
 2. 論文版
@@ -16,6 +16,8 @@
 4. 開源與工具版：GitHub、框架、本地部署
 5. GitHub AI Agent 週榜：本週新增星數最多的 5 個 agent 相關 repo
 6. 社群熱議版：HN、Reddit、PTT、掘金、V2EX 等討論，以及工程師的實作心得
+
+**各地社群反應（選用，需要 Parallel API key）**：另外在社群熱議版之後多一個版面，針對本週頭版的每一條，到知乎、Dcard、Reddit 搜尋本週的討論，摘要主要看法並引用代表性留言。只看頭版，留言是網友意見、未經查證。沒有 key 就沒有這個版面。
 
 產業、開源、社群三個版面依來源地分成「外國／台灣／中國」三群。
 
@@ -30,7 +32,7 @@
 
 ## 來源與讀取方式
 
-先由 `fetch_sources.py` 抓候選（只用公開 API、RSS 與列表頁，不需要任何 key），入選的條目再由 subagent 讀原文全文。讀原文時先用 `defuddle`；遇到擋爬蟲或要跑 JavaScript 的頁面才改用 Jina Reader 補抓（免 key，約每分鐘 20 次；設 `JINA_API_KEY` 環境變數可提高額度）。
+先由 `fetch_sources.py` 抓候選（只用公開 API、RSS 與列表頁，不需要任何 key），入選的條目再由 subagent 讀原文全文。讀原文時先用 `defuddle`；遇到擋爬蟲或要跑 JavaScript 的頁面才改用 Jina Reader 補抓（免 key，約每分鐘 20 次；設 `JINA_API_KEY` 環境變數可提高額度）。Parallel 只用在「各地社群反應」版面，補抓一律走 Jina。
 
 | 地區 | 來源 | 讀原文方式 | 讀得到原文 |
 |---|---|---|---|
@@ -48,7 +50,7 @@
 | 中國 | V2EX | 官方 API（內文＋回覆） | ✅ |
 | 中國 | 掘金 | 頁面要跑 JavaScript，直接補抓 | ✅ |
 
-Jina 有每分鐘次數上限，補抓多的週次會慢一些，偶爾讀不到的條目會改依摘要撰寫並標上「僅依摘要」。Medium 只收出版物 RSS 每個 feed 最新 10 篇（本站擋爬蟲）；Facebook、Threads、Instagram、知乎、Dcard 擋抓取或要登入，沒有收錄。
+Jina 有每分鐘次數上限，補抓多的週次會慢一些，偶爾讀不到的條目會改依摘要撰寫並標上「僅依摘要」。Medium 只收出版物 RSS 每個 feed 最新 10 篇（本站擋爬蟲）；Facebook、Threads、Instagram 擋抓取或要登入，沒有收錄；知乎、Dcard 不是候選來源，只在有 Parallel key 時用來看頭版的反應。
 
 如果你填了 `harness_profile.md`（你自己的 AI 工作流現況），能直接裝進你工作流的條目會多一個「可加進工作流」標記。
 
@@ -100,6 +102,7 @@ flowchart TD
 - Claude Code 已安裝並登入。每週的自動執行是 launchd 呼叫 `claude -p`，用的是你的 Claude Code 登入與方案額度
 - 方案額度要夠：一次執行會派 6 個 subagent 平行研究，約 30–60 分鐘
 - `python3`、`uv`、`defuddle`（安裝時 Claude Code 會幫你檢查、問過你再補）
+- 選用：Parallel API key（沒有就沒有「各地社群反應」版面，其餘不受影響）
 - 選用：寄信需要 Mail.app 已登入寄件帳號
 - Obsidian：週報只用內建功能（callout、wikilink、frontmatter），不用裝任何東西。外觀與導覽按鈕是選用，見下方「Obsidian 外觀與導覽（選用）」
 - 已知上限：來源本身都是 AI 綜合來源，自訂讀者與主題只影響篩選、評分與撰稿角度；「GitHub AI Agent 週榜」固定是 agent 主題
@@ -110,7 +113,7 @@ flowchart TD
 
 > 照 `https://github.com/dk40913/ai-radar` 的 INSTALL.md 安裝 ai-radar
 
-它會問你幾件事（Obsidian vault 路徑、要不要寄信與寄到哪、要不要順便裝 Obsidian skills 套件、週報要以誰的角度與關注哪些主題（直接用預設＝AI Agent 工程師）、要不要一併裝 Obsidian 的週報外觀與導覽按鈕；安裝它的若是 Fable，也會問你要不要改用 Opus 省額度），然後 clone、安裝、驗證。vault 路徑例如 `~/Documents/Obsidian`。
+它會問你幾件事（Obsidian vault 路徑、要不要寄信與寄到哪、有沒有 Parallel API key、要不要順便裝 Obsidian skills 套件、週報要以誰的角度與關注哪些主題（直接用預設＝AI Agent 工程師）、要不要一併裝 Obsidian 的週報外觀與導覽按鈕；安裝它的若是 Fable，也會問你要不要改用 Opus 省額度），然後 clone、安裝、驗證。vault 路徑例如 `~/Documents/Obsidian`。
 
 Obsidian 這邊不用做任何設定，週報格式由 skill 產生。想要週報截圖裡的外觀與導覽按鈕，安裝時帶 `--obsidian-addons`（或在安裝問答時回答要），會把插件與 CSS 片段一併複製進 vault；複製後還要在 Obsidian 裡啟用，見下一節。
 
@@ -132,7 +135,7 @@ Obsidian 這邊不用做任何設定，週報格式由 skill 產生。想要週�
 | 位置 | 內容 |
 |------|------|
 | `~/.claude/skills/ai-radar/` | skill 本體與腳本 |
-| `~/.claude/skills/ai-radar/config.json` | 設定：vault、收件者、模型、工具所在目錄、讀者與關注主題 |
+| `~/.claude/skills/ai-radar/config.json` | 設定：vault、收件者、模型、是否用 Parallel、工具所在目錄、讀者與關注主題 |
 | `~/.claude/skills/ai-radar/harness_profile.md` | 你的工作流現況（可自行改寫） |
 | `~/Library/LaunchAgents/com.<你的帳號>.ai-radar.plist` | 每週六 09:00 的排程 |
 | `~/.local/state/ai-radar/` | 上次執行時間與每次執行的中間檔 |
@@ -173,7 +176,7 @@ Obsidian 這邊不用做任何設定，週報格式由 skill 產生。想要週�
 ```bash
 cd ~/project/ai-radar   # 你 clone 的位置
 git pull
-./install.sh --vault <同樣的 vault> [其他當初用的旗標]
+./install.sh --vault <同樣的 vault> --parallel <yes|no> [其他當初用的旗標]
 ```
 
 重跑 `install.sh` 是安全的：設定檔依旗標重寫，`harness_profile.md` 與 vault 裡的 `CLAUDE.md` 不會被覆蓋。
@@ -186,7 +189,7 @@ rm ~/Library/LaunchAgents/com.$USER.ai-radar.plist
 rm -rf ~/.claude/skills/ai-radar ~/.local/state/ai-radar
 ```
 
-vault 裡的 `AI知識雷達/` 資料夾是你的週報，要留要刪自己決定。如果裝過 Obsidian 外觀與導覽，在 Obsidian 裡停用並刪除 `note-nav-buttons` 插件與 `newspaper` 片段。
+vault 裡的 `AI知識雷達/` 資料夾是你的週報，要留要刪自己決定。有設 Parallel MCP 而且不再需要的話：`claude mcp remove --scope user Parallel-Search-MCP`。如果裝過 Obsidian 外觀與導覽，在 Obsidian 裡停用並刪除 `note-nav-buttons` 插件與 `newspaper` 片段。
 
 ## 授權
 
