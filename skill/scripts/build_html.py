@@ -288,7 +288,7 @@ def build_digest(fm, body_md):
         groups = [(r, re.findall(r"^### (.+)$", md, flags=re.M)) for r, md in split_regions(content)]
         groups = [(r, ts) for r, ts in groups if ts]
         if groups:
-            out.append(f"【{sec}】" + "；".join((f"{r}：" if r else "") + "、".join(re.sub(r"：社群反應$", "", plain(t)) for t in ts)
+            out.append(f"【{sec}】" + "；".join((f"{r}：" if r else "") + "、".join(re.sub(r"：社群反應$", "", plain(t)) if sec == "各地社群反應" else plain(t) for t in ts)
                                                for r, ts in groups))
     out.append("")
 

@@ -126,7 +126,7 @@ awk '/^## AI 概念筆記/{f=1;next} /^## /{f=0} f' "$VAULT/INDEX.md" | grep -oE
 
 ### 5. 平行研究（每個版面一個 subagent）
 
-用 Agent tool（`general-purpose`，**`model: SUBAGENT_MODEL`**，不可省略：沒指定會落到 session 預設模型）**在同一則訊息裡同時派出**六個 subagent。每個 subagent 的 prompt 包含：
+用 Agent tool（`general-purpose`，**`model: SUBAGENT_MODEL`**，不可省略：沒指定會落到 session 預設模型）**在同一則訊息裡同時派出**六個 subagent（PARALLEL 為 true 時再加下面的「各地社群反應」，共七個）。六個版面 subagent 的 prompt 包含：
 
 - 它的版面名稱與 `section_<name>.json` 路徑
 - `images_list.txt` 路徑
@@ -154,7 +154,7 @@ awk '/^## AI 概念筆記/{f=1;next} /^## /{f=0} f' "$VAULT/INDEX.md" | grep -oE
 
 > 這個版面是本週 GitHub AI Agent 週榜，JSON 陣列順序就是名次，不要調換。標題格式改成 `### <名次>. <owner/repo>（本週 +<score> ⭐，總計 <extra.total_stars> ⭐）`。原文讀 repo 首頁的 README。四段的「技術核心」要講它怎麼運作、怎麼裝怎麼用、跟同類工具差在哪；「為什麼重要」要說明這週為什麼突然紅（有發布、有名人推、還是踩中某個需求）。
 
-**PARALLEL 為 true 時**，同一則訊息裡再多派一個「各地社群反應」subagent（一樣 `model: SUBAGENT_MODEL`），prompt 包含 `section_headline.json` 路徑、今天日期、SINCE（台北日期）與以下固定指令。PARALLEL 為 false 時不派，也沒有這個版面。
+**PARALLEL 為 true 時**，同一則訊息裡再多派一個「各地社群反應」subagent（一樣 `model: SUBAGENT_MODEL`），prompt 只包含 `section_headline.json` 路徑、RUN_DIR、今天日期、SINCE（台北日期）與以下固定指令，不套用上面版面 subagent 的共同內容與固定指令。PARALLEL 為 false 時不派，也沒有這個版面。
 
 > 你負責「各地社群反應」。讀 `<section_headline.json>`，對每一條頭版，到知乎、Dcard、Reddit 找本週的討論並整理反應。
 > 先用 ToolSearch 載入 `mcp__Parallel-Search-MCP__web_search` 與 `mcp__Parallel-Search-MCP__web_fetch`；載入失敗就只寫一行 `PARALLEL_UNAVAILABLE` 到 `<RUN_DIR>/draft_reactions.md` 然後結束。所有呼叫都帶 `session_id: "ai-radar-<今天>"`。
@@ -171,17 +171,17 @@ awk '/^## AI 概念筆記/{f=1;next} /^## /{f=0} f' "$VAULT/INDEX.md" | grep -oE
 >    - 只有 `###` 段落，不要 `##` 標題。
 > 回覆只需要一行：完成幾條頭版、每個平台找到幾則討論、哪個平台失敗。
 
-subagent 失敗或回報異常時重派一次；仍失敗則該版面寫「本版面本週產生失敗」。
+subagent 失敗或回報異常時重派一次；仍失敗則該版面寫「本版面本週產生失敗」（各地社群反應除外：不放這個版面，改在 `sources_failed` 加 `parallel_reactions`）。
 
 ### 6. 組稿
 
-讀六份 draft，依 `VAULT/AI知識雷達/CLAUDE.md` 的格式寫 REPORT：
+讀六份 draft（加上存在的 `draft_reactions.md`），依 `VAULT/AI知識雷達/CLAUDE.md` 的格式寫 REPORT：
 
 - frontmatter：`title`、`date`、`tags`（`type/journal`、`AI`、`radar`）、`period_start`、`period_end`（台北日期）、`item_count`、`sources_failed`
 - `# AI 知識雷達 <日期>` 與 `> 涵蓋 <台北時間 SINCE> 至 <台北時間 UNTIL>`
 - `## 頭版` 前先寫一段 150–300 字的**本週導讀**，串起本週最重要的 2–3 條線索
 - 依序 `## 頭版`、`## 論文版`、`## 產業與產品版`、`## 開源與工具版`、`## GitHub AI Agent 週榜`、`## 社群熱議版`、`## 各地社群反應`（有才放，見下），貼入各 draft；`item_count` 包含週榜的 5 條
-- `## 各地社群反應`：放在 `## 社群熱議版` 之後、`## 本週值得跟進` 之前，只在 `draft_reactions.md` 存在且有 `###` 段落時才放。版面開頭一行 `> [!info] 依本週頭版搜尋知乎、Dcard、Reddit 的討論，留言是網友意見，未經查證。`，接著貼 draft。檔案不存在、內容是 `PARALLEL_UNAVAILABLE`、或沒有 `###` 段落時不放這個版面；PARALLEL 為 true 卻沒產出時，在 `sources_failed` 加 `parallel_reactions`。`item_count` 不計這個版面
+- `## 各地社群反應`：放在 `## 社群熱議版` 之後、`## 本週值得跟進` 之前，只在 `draft_reactions.md` 存在且有 `###` 段落時才放。版面開頭一行 `> [!info] 依本週頭版搜尋知乎、Dcard、Reddit 的討論，留言是網友意見，未經查證。`，接著貼 draft。檔案不存在、內容是 `PARALLEL_UNAVAILABLE`、或沒有 `###` 段落時不放這個版面；PARALLEL 為 true 卻沒產出（含內容只有 `PARALLEL_UNAVAILABLE`）時，在 `sources_failed` 加 `parallel_reactions`。頭版 draft 改寫過標題的話，把 `### <標題>：社群反應` 的標題改成和 `## 頭版` 一致。`item_count` 不計這個版面
 - `## 本週值得跟進`：3–5 個具體行動項目（值得試的工具、值得讀的論文、值得追的產品），每項一兩句說明為什麼
 - `## 附錄：其他掃到的項目`：從 `appendix.json` 每條一行 `- [標題](url) — 一句話`
 - 若有來源失敗，在附錄末尾加 `> [!note] 本週抓取失敗的來源：...`
