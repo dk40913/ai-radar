@@ -18,6 +18,11 @@ fi
 [ -f "$BODY_FILE" ] || { echo "body file not found: $BODY_FILE" >&2; exit 1; }
 if [ -n "$ATTACH" ] && [ ! -f "$ATTACH" ]; then echo "attachment not found: $ATTACH" >&2; exit 1; fi
 
+# Mail.app 拿到相對路徑會默默不附上附件，一律轉成絕對路徑
+abspath() { echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"; }
+BODY_FILE="$(abspath "$BODY_FILE")"
+[ -n "$ATTACH" ] && ATTACH="$(abspath "$ATTACH")"
+
 # 內文從檔案讀進 AppleScript，避免引號跳脫問題
 osascript - "$SUBJECT" "$BODY_FILE" "$TO" "$ATTACH" <<'EOF'
 on run argv
@@ -34,7 +39,13 @@ on run argv
         make new attachment with properties {file name:(POSIX file attachPath)} at after the last paragraph
       end if
     end tell
-    if attachPath is not "" then delay 3 -- 附件載入需要一點時間，太快 send 會掉附件
+    if attachPath is not "" then
+      delay 3 -- 附件載入需要一點時間，太快 send 會掉附件
+      if (count of attachments of content of m) is 0 then
+        close m saving no
+        error "attachment was not attached: " & attachPath
+      end if
+    end if
     send m
   end tell
 end run

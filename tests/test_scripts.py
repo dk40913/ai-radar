@@ -82,6 +82,16 @@ class SendMailTests(ScriptsTestCase):
         self.assertIn("arg@example.com", lines)
         self.assertNotIn("cfg@example.com", lines)
 
+    def test_relative_attachment_passed_as_absolute(self):
+        self.config(mail_to="cfg@example.com")
+        r = subprocess.run(
+            [str(self.skill / "scripts/send_mail.sh"), "subj", "SKILL.md", "", "SKILL.md"],
+            env=self.env(), capture_output=True, text=True, cwd=self.skill)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        lines = self.osa_args.read_text().splitlines()
+        self.assertIn(str((self.skill / "SKILL.md").resolve()), lines)
+        self.assertNotIn("SKILL.md", lines)
+
 
 class RunShTests(ScriptsTestCase):
     def test_empty_model_omits_model_flag(self):
