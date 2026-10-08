@@ -72,7 +72,11 @@ pre{background:#f4f1ea;padding:10px;border-radius:5px;overflow-x:auto;font-size:
 table{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0}
 th,td{border:1px solid var(--rule);padding:6px 8px;text-align:left;vertical-align:top}
 th{background:var(--soft)}
-.top{position:fixed;right:16px;bottom:16px;background:var(--ink);color:#fff;border-radius:20px;padding:6px 12px;font-size:12px;text-decoration:none;opacity:.8}
+.fab{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:10}
+.fab a,.fab button{width:44px;height:44px;border-radius:50%;border:none;background:var(--ink);color:#fff;font-size:18px;line-height:44px;text-align:center;text-decoration:none;cursor:pointer;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.fab a:hover,.fab button:hover{background:var(--accent)}
+#tocpop{inset:auto;right:72px;bottom:16px;margin:0;width:min(380px,calc(100vw - 96px));max-height:75vh;overflow-y:auto;padding:0;border:1px solid var(--rule);border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.2);background:var(--paper)}
+#tocpop nav.toc{margin:0;border:none}
 .footer{margin-top:40px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--rule);padding-top:12px}
 @media (max-width:600px){.masthead h1{font-size:30px}.page{padding:16px 14px 70px}body{font-size:15.5px}}
 """
@@ -234,8 +238,20 @@ def build_html(fm, body_md, images_dir):
 <div class="period">{htmlmod.escape(period_line)}</div><div class="stats">{stats}</div></header>
 {toc}
 {body}
-<div class="footer">由 AI 知識雷達自動產生 · 完整 Markdown 版在 Obsidian「AI知識雷達」資料夾</div>
-</div><a class="top" href="#top">回頂端</a></body></html>"""
+<div class="footer" id="bottom">由 AI 知識雷達自動產生 · 完整 Markdown 版在 Obsidian「AI知識雷達」資料夾</div>
+</div>
+<div class="fab"><a href="#top" title="回到頂端">↑</a><button type="button" popovertarget="tocpop" title="目錄">☰</button><a href="#bottom" title="到底端">↓</a></div>
+<div id="tocpop" popover>{toc}</div>
+<script>
+document.querySelectorAll('#tocpop a').forEach(function (a) {{
+  a.addEventListener('click', function () {{
+    var t = document.getElementById(decodeURIComponent(a.hash.slice(1)));
+    var d = t && (t.tagName === 'DETAILS' ? t : t.closest('details'));
+    if (d) d.open = true;
+    document.getElementById('tocpop').hidePopover();
+  }});
+}});
+</script></body></html>"""
 
 
 def build_digest(fm, body_md):
