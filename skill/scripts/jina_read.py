@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """用 Jina Reader（r.jina.ai，免 key、約每分鐘 20 次）把網頁轉成 markdown 印到 stdout。
-沒有 Parallel API key 時當 defuddle 讀不到的備援；有設 JINA_API_KEY 環境變數會帶上，額度較高。
+defuddle 讀不到時的補抓；有設 JINA_API_KEY 環境變數會帶上，額度較高。
 
 用法: jina_read.py <url> [最多字元數，預設 30000]
 """

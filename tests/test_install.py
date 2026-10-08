@@ -45,7 +45,7 @@ class InstallTestCase(unittest.TestCase):
         return r
 
     def default(self):
-        return self.ok("--vault", "~/Documents/Vault", "--parallel", "no")
+        return self.ok("--vault", "~/Documents/Vault")
 
     def test_skill_files_and_config(self):
         self.default()
@@ -55,7 +55,7 @@ class InstallTestCase(unittest.TestCase):
         self.assertFalse((self.skill / "settings.template.json").exists())
         self.assertFalse(list(self.skill.rglob("__pycache__")))
         self.assertEqual(self.config(), {
-            "parallel": False, "vault": str(self.vault), "mail_to": "",
+            "vault": str(self.vault), "mail_to": "",
             "model": "", "subagent_model": "opus", "reader": "AI Agent 工程師",
             "focus": "AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具", "arxiv_keywords": []})
         self.assertTrue((self.home / ".local/state/ai-radar").is_dir())
@@ -87,7 +87,7 @@ class InstallTestCase(unittest.TestCase):
         self.skill = self.home / ".claude/skills/ai-radar"
         vault = self.home / 'Documents/My "Notes" & Co'
         vault.mkdir(parents=True)
-        self.ok("--vault", str(vault), "--parallel", "no")
+        self.ok("--vault", str(vault))
         allow = json.loads((self.skill / "settings.json").read_text())["permissions"]["allow"]
         self.assertIn('Edit(~/Documents/My "Notes" & Co/AI知識雷達/**)', allow)
         self.assertIn(f"Bash({self.skill}/scripts/send_mail.sh:*)", allow)
@@ -99,7 +99,7 @@ class InstallTestCase(unittest.TestCase):
     def test_settings_outside_home(self):
         other = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, other, ignore_errors=True)
-        self.ok("--vault", str(other), "--parallel", "no")
+        self.ok("--vault", str(other))
         text = (self.skill / "settings.json").read_text()
         self.assertIn(f"Edit(/{other}/AI知識雷達/**)", text)
         self.assertNotRegex(text, r"__(HOME|USER|VAULT_RULE)__")
@@ -121,17 +121,17 @@ class InstallTestCase(unittest.TestCase):
         self.default()
         (self.skill / "harness_profile.md").write_text("mine")
         (self.vault / "AI知識雷達/CLAUDE.md").write_text("mine too")
-        self.ok("--vault", "~/Documents/Vault", "--parallel", "yes", "--mail-to", "a@b.c",
+        self.ok("--vault", "~/Documents/Vault", "--mail-to", "a@b.c",
                 "--model", "m1", "--subagent-model", "sonnet")
         self.assertEqual(self.config(), {
-            "parallel": True, "vault": str(self.vault), "mail_to": "a@b.c",
+            "vault": str(self.vault), "mail_to": "a@b.c",
             "model": "m1", "subagent_model": "sonnet", "reader": "AI Agent 工程師",
             "focus": "AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具", "arxiv_keywords": []})
         self.assertEqual((self.skill / "harness_profile.md").read_text(), "mine")
         self.assertEqual((self.vault / "AI知識雷達/CLAUDE.md").read_text(), "mine too")
 
     def test_reader_focus_keywords(self):
-        r = self.ok("--vault", "~/Documents/Vault", "--parallel", "no", "--reader", "醫療影像研究員",
+        r = self.ok("--vault", "~/Documents/Vault", "--reader", "醫療影像研究員",
                     "--focus", "醫學影像、診斷模型", "--arxiv-keywords", " Medical Imag, segmentation,,MRI ")
         cfg = self.config()
         self.assertEqual(cfg["reader"], "醫療影像研究員")
@@ -145,7 +145,7 @@ class InstallTestCase(unittest.TestCase):
         repo = self.tmp / "repo"
         shutil.copytree(REPO, repo, ignore=shutil.ignore_patterns(".git", ".superpowers", "__pycache__"))
         (repo / "skill/harness_profile.example.md").write_text("example profile")
-        self.ok("--vault", "~/Documents/Vault", "--parallel", "no", repo=repo)
+        self.ok("--vault", "~/Documents/Vault", repo=repo)
         self.assertEqual((self.skill / "harness_profile.md").read_text(), "example profile")
 
     def test_no_example_means_no_profile(self):
@@ -153,13 +153,16 @@ class InstallTestCase(unittest.TestCase):
         if not (REPO / "skill/harness_profile.example.md").exists():
             self.assertFalse((self.skill / "harness_profile.md").exists())
 
+    def test_parallel_flag_is_ignored(self):
+        r = self.ok("--vault", "~/Documents/Vault", "--parallel", "yes")
+        self.assertNotIn("parallel", self.config())
+        self.assertIn("no longer used", r.stderr)
+
     def test_errors(self):
-        self.assertNotEqual(self.install("--parallel", "no").returncode, 0)
-        self.assertNotEqual(self.install("--vault", str(self.tmp / "nope"), "--parallel", "no").returncode, 0)
-        self.assertNotEqual(self.install("--vault", str(self.vault), "--parallel", "no",
+        self.assertNotEqual(self.install("--mail-to", "a@b.c").returncode, 0)
+        self.assertNotEqual(self.install("--vault", str(self.tmp / "nope")).returncode, 0)
+        self.assertNotEqual(self.install("--vault", str(self.vault),
                                          "--subagent-model", "fable").returncode, 0)
-        self.assertNotEqual(self.install("--vault", str(self.vault)).returncode, 0)
-        self.assertNotEqual(self.install("--vault", str(self.vault), "--parallel", "maybe").returncode, 0)
 
 
 if __name__ == "__main__":

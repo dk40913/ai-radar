@@ -41,5 +41,11 @@ class ReaderFocusTest(unittest.TestCase):
         self.assertIn("**對 <READER>的意義**", text)
 
 
+class NoParallelTest(unittest.TestCase):
+    def test_no_parallel_references(self):
+        for name in ("SKILL.md", "settings.template.json"):
+            self.assertNotIn("Parallel", (REPO / "skill" / name).read_text(encoding="utf-8"), name)
+
+
 if __name__ == "__main__":
     unittest.main()

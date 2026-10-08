@@ -39,7 +39,7 @@ class ScriptsTestCase(unittest.TestCase):
         p.chmod(0o755)
 
     def config(self, **kw):
-        cfg = {"parallel": False, "vault": str(self.home / "Vault"), "mail_to": "",
+        cfg = {"vault": str(self.home / "Vault"), "mail_to": "",
                "model": "", "subagent_model": "opus"}
         cfg.update(kw)
         (self.skill / "config.json").write_text(json.dumps(cfg))

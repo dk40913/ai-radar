@@ -5,13 +5,13 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 USER_NAME="${USER:-$(id -un)}"
 
-VAULT=""; PARALLEL=""; MAIL_TO=""; MODEL=""; SUBAGENT_MODEL="opus"
+VAULT=""; MAIL_TO=""; MODEL=""; SUBAGENT_MODEL="opus"
 READER="AI Agent 工程師"; FOCUS="AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具"; ARXIV_KEYWORDS=""
 NO_LAUNCHD=0; SKIP_CHECKS=0
 
 die() { echo "error: $*" >&2; exit 1; }
 usage() {
-  echo "usage: install.sh --vault PATH --parallel yes|no [--mail-to EMAIL] [--model ID]" >&2
+  echo "usage: install.sh --vault PATH [--mail-to EMAIL] [--model ID]" >&2
   echo "                  [--subagent-model opus|sonnet|haiku] [--reader TEXT] [--focus TEXT]" >&2
   echo "                  [--arxiv-keywords \"k1,k2,...\"] [--no-launchd] [--skip-checks]" >&2
 }
@@ -19,7 +19,7 @@ usage() {
 while [ $# -gt 0 ]; do
   case "$1" in
     --vault) [ $# -ge 2 ] || die "--vault needs a value"; VAULT="$2"; shift 2 ;;
-    --parallel) [ $# -ge 2 ] || die "--parallel needs a value"; PARALLEL="$2"; shift 2 ;;
+    --parallel) [ $# -ge 2 ] || die "--parallel needs a value"; echo "note: --parallel is no longer used, ignoring" >&2; shift 2 ;;
     --mail-to) [ $# -ge 2 ] || die "--mail-to needs a value"; MAIL_TO="$2"; shift 2 ;;
     --model) [ $# -ge 2 ] || die "--model needs a value"; MODEL="$2"; shift 2 ;;
     --subagent-model) [ $# -ge 2 ] || die "--subagent-model needs a value"; SUBAGENT_MODEL="$2"; shift 2 ;;
@@ -33,10 +33,6 @@ while [ $# -gt 0 ]; do
 done
 
 [ -n "$VAULT" ] || { usage; die "--vault is required"; }
-case "$PARALLEL" in
-  yes|no) ;;
-  *) usage; die "--parallel must be yes or no" ;;
-esac
 case "$SUBAGENT_MODEL" in
   opus|sonnet|haiku) ;;
   *) die "--subagent-model must be opus, sonnet or haiku" ;;
@@ -73,12 +69,12 @@ for tool in claude defuddle uv python3; do
   fi
 done
 
-AIR_PARALLEL="$PARALLEL" AIR_VAULT="$VAULT" AIR_MAIL_TO="$MAIL_TO" AIR_MODEL="$MODEL" \
+AIR_VAULT="$VAULT" AIR_MAIL_TO="$MAIL_TO" AIR_MODEL="$MODEL" \
 AIR_SUBAGENT="$SUBAGENT_MODEL" AIR_TOOL_DIRS="$TOOL_DIRS" AIR_READER="$READER" AIR_FOCUS="$FOCUS" \
 AIR_ARXIV_KEYWORDS="$ARXIV_KEYWORDS" python3 - "$DEST/config.json" <<'PY'
 import json, os, sys
 dirs = list(dict.fromkeys(d for d in os.environ["AIR_TOOL_DIRS"].splitlines() if d))
-cfg = {"parallel": os.environ["AIR_PARALLEL"] == "yes", "vault": os.environ["AIR_VAULT"],
+cfg = {"vault": os.environ["AIR_VAULT"],
        "mail_to": os.environ["AIR_MAIL_TO"], "model": os.environ["AIR_MODEL"],
        "subagent_model": os.environ["AIR_SUBAGENT"], "path_prepend": dirs,
        "reader": os.environ["AIR_READER"], "focus": os.environ["AIR_FOCUS"],
@@ -143,7 +139,6 @@ echo "ai-radar installed"
 echo "  skill:     $DEST"
 echo "  vault:     $VAULT"
 echo "  mail:      ${MAIL_TO:-(disabled)}"
-echo "  parallel:  $PARALLEL"
 echo "  model:     ${MODEL:-(default)}  subagent: $SUBAGENT_MODEL"
 echo "  focus:     $READER — $FOCUS"
 if [ "$NO_LAUNCHD" -eq 0 ]; then echo "  schedule:  Saturday 09:00 ($LABEL)"; else echo "  schedule:  not loaded (--no-launchd)"; fi
