@@ -41,7 +41,9 @@
       "Bash(__HOME__/.claude/skills/ai-radar/scripts/build_html.py:*)",
       "Bash(cp:*)",
       "Bash(sips:*)",
-      "ToolSearch"
+      "ToolSearch",
+      "mcp__Parallel-Search-MCP__web_search",
+      "mcp__Parallel-Search-MCP__web_fetch"
     ],
     "deny": [
       "Bash(rm:*)",

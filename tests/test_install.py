@@ -57,7 +57,7 @@ class InstallTestCase(unittest.TestCase):
         self.assertEqual(self.config(), {
             "vault": str(self.vault), "mail_to": "",
             "model": "", "subagent_model": "opus", "reader": "AI Agent 工程師",
-            "focus": "AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具", "arxiv_keywords": []})
+            "focus": "AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具", "arxiv_keywords": [], "parallel": False})
         self.assertTrue((self.home / ".local/state/ai-radar").is_dir())
 
     def test_settings_inside_home(self):
@@ -126,7 +126,7 @@ class InstallTestCase(unittest.TestCase):
         self.assertEqual(self.config(), {
             "vault": str(self.vault), "mail_to": "a@b.c",
             "model": "m1", "subagent_model": "sonnet", "reader": "AI Agent 工程師",
-            "focus": "AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具", "arxiv_keywords": []})
+            "focus": "AI Agent、LLM 推論與部署、RAG、本地模型、agent 框架與工具", "arxiv_keywords": [], "parallel": False})
         self.assertEqual((self.skill / "harness_profile.md").read_text(), "mine")
         self.assertEqual((self.vault / "AI知識雷達/CLAUDE.md").read_text(), "mine too")
 
@@ -153,10 +153,18 @@ class InstallTestCase(unittest.TestCase):
         if not (REPO / "skill/harness_profile.example.md").exists():
             self.assertFalse((self.skill / "harness_profile.md").exists())
 
-    def test_parallel_flag_is_ignored(self):
+    def test_parallel_flag(self):
+        r = self.default()
+        self.assertIs(self.config()["parallel"], False)
+        self.assertIn("parallel:  no", r.stdout)
         r = self.ok("--vault", "~/Documents/Vault", "--parallel", "yes")
-        self.assertNotIn("parallel", self.config())
-        self.assertIn("no longer used", r.stderr)
+        self.assertIs(self.config()["parallel"], True)
+        self.assertIn("parallel:  yes", r.stdout)
+
+    def test_parallel_flag_rejects_other_values(self):
+        r = self.install("--vault", "~/Documents/Vault", "--parallel", "maybe")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("--parallel must be yes or no", r.stderr)
 
     def test_obsidian_addons_copied(self):
         r = self.ok("--vault", "~/Documents/Vault", "--obsidian-addons")

@@ -1,3 +1,4 @@
+import json
 import subprocess
 import tempfile
 import unittest
@@ -41,10 +42,11 @@ class ReaderFocusTest(unittest.TestCase):
         self.assertIn("**對 <READER>的意義**", text)
 
 
-class NoParallelTest(unittest.TestCase):
-    def test_no_parallel_references(self):
-        for name in ("SKILL.md", "settings.template.json"):
-            self.assertNotIn("Parallel", (REPO / "skill" / name).read_text(encoding="utf-8"), name)
+class ParallelPermissionTest(unittest.TestCase):
+    def test_settings_allow_parallel_tools(self):
+        allow = json.loads((REPO / "skill/settings.template.json").read_text(encoding="utf-8"))["permissions"]["allow"]
+        for tool in ("mcp__Parallel-Search-MCP__web_search", "mcp__Parallel-Search-MCP__web_fetch"):
+            self.assertIn(tool, allow)
 
 
 if __name__ == "__main__":
