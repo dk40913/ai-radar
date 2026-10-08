@@ -110,7 +110,7 @@ flowchart TD
 
 > 照 `https://github.com/dk40913/ai-radar` 的 INSTALL.md 安裝 ai-radar
 
-它會問你幾件事（Obsidian vault 路徑、要不要寄信與寄到哪、要不要順便裝 Obsidian skills 套件、週報要以誰的角度與關注哪些主題（直接用預設＝AI Agent 工程師）；安裝它的若是 Fable，也會問你要不要改用 Opus 省額度），然後 clone、安裝、驗證。vault 路徑例如 `~/Documents/Obsidian`。
+它會問你幾件事（Obsidian vault 路徑、要不要寄信與寄到哪、要不要順便裝 Obsidian skills 套件、週報要以誰的角度與關注哪些主題（直接用預設＝AI Agent 工程師）、要不要一併裝 Obsidian 的週報外觀與導覽按鈕；安裝它的若是 Fable，也會問你要不要改用 Opus 省額度），然後 clone、安裝、驗證。vault 路徑例如 `~/Documents/Obsidian`。
 
 Obsidian 這邊不用做任何設定，週報格式由 skill 產生。想要週報截圖裡的外觀與導覽按鈕，安裝時帶 `--obsidian-addons`（或在安裝問答時回答要），會把插件與 CSS 片段一併複製進 vault；複製後還要在 Obsidian 裡啟用，見下一節。
 
